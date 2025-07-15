@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.chart.PieChart?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml" fx:controller="app.gui.MainController">
+    <top>
+        <ToolBar>
+            <Button text="Aggiungi" onAction="#onAdd"/>
+            <Button text="Rimuovi"  onAction="#onRemove"/>
+            <Button text="Report"   onAction="#onReport"/>
+        </ToolBar>
+    </top>
+
+    <center>
+        <TableView fx:id="table">
+            <columns>
+                <TableColumn text="Data"        fx:id="colDate"   prefWidth="100"/>
+                <TableColumn text="Tipo"        fx:id="colType"   prefWidth="70"/>
+                <TableColumn text="Categoria"   fx:id="colCat"    prefWidth="120"/>
+                <TableColumn text="Importo"     fx:id="colAmount" prefWidth="90"/>
+                <TableColumn text="Descrizione" fx:id="colDesc"   prefWidth="200"/>
+            </columns>
+        </TableView>
+    </center>
+
+    <right>
+        <PieChart fx:id="pie" prefWidth="320"/>
+    </right>
+</BorderPane>

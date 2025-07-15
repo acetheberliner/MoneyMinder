@@ -1,6 +1,6 @@
 package app;
 
-import info.picocli.CommandLine;
+import picocli.CommandLine;
 import app.dao.JsonTransactionDao;
 import app.service.TransactionService;
 import app.ui.CliCommand;

@@ -1,11 +1,11 @@
 package app.ui;
 
-import info.picocli.CommandLine;                    // per new CommandLine(...)
-import info.picocli.CommandLine.Command;            // <─ annotazione
-import info.picocli.CommandLine.Option;             // <─ annotazione
-import info.picocli.CommandLine.Parameters;         // <─ annotazione
-import info.picocli.CommandLine.Spec;               // <─ annotazione
-import info.picocli.CommandLine.CommandSpec;        // <─ tipo usato da @Spec
+import picocli.CommandLine;                    // per new CommandLine(...)
+import picocli.CommandLine.Command;            // <─ annotazione
+import picocli.CommandLine.Option;             // <─ annotazione
+import picocli.CommandLine.Parameters;         // <─ annotazione
+import picocli.CommandLine.Spec;               // <─ annotazione
+import picocli.CommandLine.Model.CommandSpec;        // <─ tipo usato da @Spec
 
 import app.model.*;                                 // i tuoi model
 import app.service.TransactionService;
