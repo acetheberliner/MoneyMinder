@@ -8,23 +8,27 @@
         <ToolBar>
             <Button text="Aggiungi" onAction="#onAdd"/>
             <Button text="Rimuovi"  onAction="#onRemove"/>
-            <Button text="Report"   onAction="#onReport"/>
         </ToolBar>
     </top>
 
     <center>
         <TableView fx:id="table">
             <columns>
-                <TableColumn text="Data"        fx:id="colDate"   prefWidth="100"/>
-                <TableColumn text="Tipo"        fx:id="colType"   prefWidth="70"/>
-                <TableColumn text="Categoria"   fx:id="colCat"    prefWidth="120"/>
-                <TableColumn text="Importo"     fx:id="colAmount" prefWidth="90"/>
-                <TableColumn text="Descrizione" fx:id="colDesc"   prefWidth="200"/>
+                <TableColumn text="Data"         fx:id="colDate"   prefWidth="110"/>
+                <TableColumn text="Tipo"         fx:id="colType"   prefWidth="80"/>
+                <TableColumn text="Categoria"    fx:id="colCat"    prefWidth="130"/>
+                <TableColumn text="Importo"       fx:id="colAmount" prefWidth="110"/>
+                <TableColumn text="Descrizione"  fx:id="colDesc"   prefWidth="250"/>
             </columns>
         </TableView>
     </center>
-
+    
     <right>
-        <PieChart fx:id="pie" prefWidth="320"/>
+        <VBox spacing="10" alignment="CENTER">
+            <Label text="Uscite" style="-fx-font-size: 14; -fx-font-weight: bold;"/>
+            <PieChart fx:id="pieExpense" prefWidth="350" prefHeight="250"/>
+            <Label text="Entrate" style="-fx-font-size: 14; -fx-font-weight: bold;"/>
+            <PieChart fx:id="pieIncome"  prefWidth="350" prefHeight="250"/>
+        </VBox>
     </right>
 </BorderPane>

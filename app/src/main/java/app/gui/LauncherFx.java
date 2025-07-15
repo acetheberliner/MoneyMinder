@@ -20,7 +20,7 @@ public final class LauncherFx extends Application {
         scene.getStylesheets().add(getClass().getResource("/style.css").toExternalForm());
 
         /* tema JMetro (light) */
-        new JMetro(Style.LIGHT).setScene(scene);
+        new JMetro(Style.DARK).setScene(scene);
 
         /* window */
         stage.setTitle("MoneyMinder");

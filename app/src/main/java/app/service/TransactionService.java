@@ -54,14 +54,14 @@ public final class TransactionService {
 
     private static MonthlyReport buildReport(List<Transaction> txs) {   // <<< rename OK
         Money income = txs.stream()
-                .filter(t -> t.type() == TxType.INCOME)
-                .map(Transaction::amount)
-                .reduce(Money.ZERO, Money::add);
+        .filter(t -> t.type() == TxType.ENTRATA)   // prima INCOME
+        .map(Transaction::amount)
+        .reduce(Money.ZERO, Money::add);
 
         Money expense = txs.stream()
-                .filter(t -> t.type() == TxType.EXPENSE)
-                .map(Transaction::amount)
-                .reduce(Money.ZERO, Money::add);
+        .filter(t -> t.type() == TxType.USCITA)    // prima EXPENSE
+        .map(Transaction::amount)
+        .reduce(Money.ZERO, Money::add);
 
         Map<String, Money> byCat = txs.stream().collect(Collectors.groupingBy(
                 t -> t.category().name(),
