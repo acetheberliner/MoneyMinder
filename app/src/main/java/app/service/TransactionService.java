@@ -70,4 +70,10 @@ public final class TransactionService {
         ));
         return new MonthlyReport(income, expense, byCat);
     }
+
+    public void replaceAll(Collection<Transaction> txs) {
+        cache.clear();
+        cache.addAll(txs);
+        persist();
+    }
 }

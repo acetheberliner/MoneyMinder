@@ -10,6 +10,8 @@ import javafx.fxml.FXML;
 import javafx.scene.chart.PieChart;
 import javafx.scene.control.*;
 
+import javafx.scene.control.Alert;
+
 import java.io.File;
 import java.time.YearMonth;
 
@@ -40,18 +42,25 @@ public final class MainController {
 
     /* ---------- Toolbar actions ---------- */
     @FXML private void onAdd() {
-        // TODO: sostituire con vero dialogo
-        service.add(new Transaction(java.time.LocalDate.now(), "Caffè",
-                Category.OTHER, Money.of("1.50"), TxType.EXPENSE));
-        table.getItems().setAll(service.list());
-        refreshPie(YearMonth.now());
+        TransactionDialog.show().ifPresent(tx -> {
+            service.add(tx);                       
+            table.getItems().add(tx);              
+            refreshPie(YearMonth.from(tx.date())); 
+        });
     }
 
     @FXML private void onRemove() {
-        Transaction sel = table.getSelectionModel().getSelectedItem();
+        var sel = table.getSelectionModel().getSelectedItem();
         if (sel == null) return;
-        table.getItems().remove(sel);
-        // TODO: aggiornare anche il service + persist
+
+        if (new Alert(Alert.AlertType.CONFIRMATION,
+            "Rimuovere la transazione selezionata?").showAndWait().orElse(ButtonType.CANCEL)
+            == ButtonType.OK) {
+
+            table.getItems().remove(sel);
+            service.replaceAll(table.getItems());   // nuovo metodo nel service
+            refreshPie(YearMonth.from(sel.date()));
+        }
     }
 
     @FXML private void onReport() {

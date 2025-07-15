@@ -31,6 +31,9 @@ dependencies {
     implementation("info.picocli:picocli:4.7.5")
     implementation("com.fasterxml.jackson.core:jackson-databind:2.17.1")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.17.1")
+
+    implementation("org.jfxtras:jmetro:11.6.15")
+
     testImplementation("org.junit.jupiter:junit-jupiter:5.10.2")
 }
 

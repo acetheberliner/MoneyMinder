@@ -1,0 +1,15 @@
+.root {
+    -fx-font-family: "Segoe UI", sans-serif;
+}
+
+.tool-bar {
+    -fx-background-color: linear-gradient(to bottom, #e8e8e8, #d0d0d0);
+}
+
+.table-view {
+    -fx-table-cell-border-color: transparent;
+}
+
+.pie-chart {
+    -fx-pie-label-visible: true;
+}
