@@ -2,14 +2,27 @@
     -fx-font-family: "Segoe UI", sans-serif;
 }
 
+/* toolbar chiara su tema scuro */
 .tool-bar {
-    -fx-background-color: linear-gradient(to bottom, #e8e8e8, #d0d0d0);
+    -fx-background-color: linear-gradient(to bottom, #4a4a4a, #3a3a3a);
 }
 
+/* tabella */
 .table-view {
     -fx-table-cell-border-color: transparent;
 }
 
+/* testo bianco dentro alle fettine e nella legenda -------------- */
+.chart-pie-label {
+    -fx-fill: white;                 /* etichette interne slice */
+    -fx-font-weight: bold;
+}
+
+.chart-legend-item .label {
+    -fx-text-fill: white;            /* etichette della legenda */
+}
+
+/* pie-chart proprietà varie */
 .pie-chart {
     -fx-pie-label-visible: true;
 }
