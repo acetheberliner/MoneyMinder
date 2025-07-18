@@ -1,29 +1,5 @@
 # MoneyMinder – Piano di lavoro
 
-## Legenda
-- [ ] task aperto
-- [x] task completato
-- ➡️ dipende da…
-
----
-
-## Sprint 0 – Bootstrap ✓
-- [x] Repo GitHub creata (`pss23-24-money-minder-bagnolini`)
-- [x] Gradle wrapper 8.x / JDK 17
-- [x] Workflow CI `gradle.yml`
-- [x] Struttura cartelle + file base
-- [x] Commit iniziale / tag `v0.0.0`
-
-## Sprint 1 – Funzionalità MINIME
-### Model & DAO
-- [ ] Definire `Money` VO (BigDecimal + currency)  
-- [ ] Completare `JsonTransactionDao`  
-- [ ] JUnit test DAO
-
-### Persistence
-- [ ] Path default `~/.money-minder.json`  
-- [ ] Autoload + autosave su edit
-
 ### Deliverable
 - [ ] Fat-jar `money-minder-all.jar`  
 - [ ] Tag `v0.1-cli-json`
@@ -35,3 +11,22 @@
 - [ ] SQLite backend (SqliteDao)  
 - [ ] Report annuale  
 - [ ] Multivaluta (ExchangeRateProvider)
+
+-------------------------------------
+
+- Categorie personalizzate
+    - Aggiungi pulsante “+ Categoria” nel dialogo (o menu).
+    - Mantieni elenco in un JSON a parte (categories.json) e ricaricalo all’avvio.
+
+- Report mensile completo
+    - Campo DatePicker (“mese”) sopra i grafici → al cambio mese ricalcoli.
+    - Label saldo (entrate - uscite) sotto i grafici.
+
+- Aggiornamento grafici in tempo reale
+    - Collega un ListChangeListener alla ObservableList<Transaction> del table (vedi sezione D).
+
+- UI moderna (TabPane) – vedi sezione C.
+
+- Optional che vuoi tenere (budget, CSV, multivaluta…)
+    - Scelta minima: Budget per categoria (mostra progress bar + alert rosso).
+    - CSV import/export puoi rinviare se manca tempo.

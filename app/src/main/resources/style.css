@@ -26,3 +26,9 @@
 .pie-chart {
     -fx-pie-label-visible: true;
 }
+
+/* testo etichette pie + legenda bianco */
+.chart-pie-label { -fx-fill: white; -fx-font-weight: bold; }
+.chart-legend-item .label { -fx-text-fill: white; }
+
+/* mantenere le altre regole già presenti */

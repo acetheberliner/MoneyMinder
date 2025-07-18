@@ -16,7 +16,7 @@ public final class LauncherFx extends Application {
         Parent root = FXMLLoader.load(getClass().getResource("/MainView.fxml"));
 
         /* scena + CSS custom */
-        Scene scene = new Scene(root, 900, 550);
+        Scene scene = new Scene(root, 1200, 800);
         
         new JMetro(Style.DARK).setScene(scene);
 
@@ -27,6 +27,9 @@ public final class LauncherFx extends Application {
         /* window */
         stage.setTitle("MoneyMinder");
         stage.setScene(scene);
+
+        stage.setResizable(true);
+
         stage.show();
     }
 

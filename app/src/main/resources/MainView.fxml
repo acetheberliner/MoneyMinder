@@ -1,34 +1,57 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<?import javafx.scene.chart.PieChart?>
 <?import javafx.scene.control.*?>
+<?import javafx.scene.chart.*?>
 <?import javafx.scene.layout.*?>
 
-<BorderPane xmlns:fx="http://javafx.com/fxml" fx:controller="app.gui.MainController">
+<BorderPane xmlns:fx="http://javafx.com/fxml"
+            fx:controller="app.gui.MainController"
+            prefWidth="1250" prefHeight="720">
+
+    <!-- ───────────────── toolbar ───────────────── -->
     <top>
         <ToolBar>
             <Button text="Aggiungi" onAction="#onAdd"/>
             <Button text="Rimuovi"  onAction="#onRemove"/>
+            <Separator/>
+            <Label text="Mese:"/>
+            <DatePicker fx:id="monthPicker"/>
+            <Button text="Aggiorna" onAction="#onMonthConfirm"/>
+            <Separator/>
+            <TextField fx:id="txtSearch" promptText="Cerca..." onKeyReleased="#applyFilters"/>
+            <ComboBox fx:id="cbFilterCat" promptText="Categoria" onAction="#applyFilters"/>
+            <ComboBox fx:id="cbFilterType" promptText="Tipo"      onAction="#applyFilters"/>
+            <Separator/>
+            <Button text="Esporta CSV" onAction="#onExport"/>
         </ToolBar>
     </top>
 
+    <!-- ───────────────── contenuto ───────────────── -->
     <center>
-        <TableView fx:id="table">
-            <columns>
-                <TableColumn text="Data"         fx:id="colDate"   prefWidth="110"/>
-                <TableColumn text="Tipo"         fx:id="colType"   prefWidth="80"/>
-                <TableColumn text="Categoria"    fx:id="colCat"    prefWidth="130"/>
-                <TableColumn text="Importo"       fx:id="colAmount" prefWidth="110"/>
-                <TableColumn text="Descrizione"  fx:id="colDesc"   prefWidth="250"/>
-            </columns>
-        </TableView>
+        <SplitPane dividerPositions="0.55">
+            <!-- tabella cronologia -->
+            <TableView fx:id="table">
+                <columns>
+                    <TableColumn fx:id="colDate"   text="Data"        prefWidth="110"/>
+                    <TableColumn fx:id="colType"   text="Tipo"        prefWidth="80"/>
+                    <TableColumn fx:id="colCat"    text="Categoria"   prefWidth="130"/>
+                    <TableColumn fx:id="colAmount" text="Importo"     prefWidth="110"/>
+                    <TableColumn fx:id="colDesc"   text="Descrizione" prefWidth="250"/>
+                </columns>
+            </TableView>
+
+            <!-- pannello grafici -->
+            <VBox alignment="CENTER" spacing="15"
+                  style="-fx-background-color:#323233; -fx-padding:15;">
+                <Label text="Entrate" textFill="lime"
+                       style="-fx-font-size:14;-fx-font-weight:bold;"/>
+                <PieChart fx:id="pieIncome"  prefWidth="450" prefHeight="260"/>
+
+                <Label text="Uscite" textFill="red"
+                       style="-fx-font-size:14;-fx-font-weight:bold;"/>
+                <PieChart fx:id="pieExpense" prefWidth="450" prefHeight="260"/>
+
+                <Label fx:id="lblSaldo" textFill="white" style="-fx-font-size:18;"/>
+            </VBox>
+        </SplitPane>
     </center>
-    
-    <right>
-        <VBox spacing="10" alignment="CENTER" style="-fx-background-color: #323233; -fx-padding: 20;">
-            <Label text="Entrate" style="-fx-font-size: 14; -fx-font-weight: bold; -fx-text-fill: #00ff00;"/>
-            <PieChart fx:id="pieIncome"  prefWidth="350" prefHeight="250"/>
-            <Label text="Uscite" style="-fx-font-size: 14; -fx-font-weight: bold; -fx-text-fill: #ff0000;"/>
-            <PieChart fx:id="pieExpense" prefWidth="350" prefHeight="250"/>
-        </VBox>
-    </right>
 </BorderPane>
