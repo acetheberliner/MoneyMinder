@@ -1,10 +1,12 @@
 .root {
     -fx-font-family: "Segoe UI", sans-serif;
+    font-family: "Segoe UI", sans-serif;
 }
 
-/* toolbar chiara su tema scuro */
+/* toolbar chiara su tema dark */
 .tool-bar {
     -fx-background-color: linear-gradient(to bottom, #4a4a4a, #3a3a3a);
+    background-color: #4a4a4a;
 }
 
 /* tabella */
@@ -12,14 +14,17 @@
     -fx-table-cell-border-color: transparent;
 }
 
-/* testo bianco dentro alle fettine e nella legenda -------------- */
+/* testo bianco dentro alle slices e nella legenda -------------- */
 .chart-pie-label {
-    -fx-fill: white;                 /* etichette interne slice */
+    -fx-fill: white;
+    fill: white;
     -fx-font-weight: bold;
+    font-weight: bold;
 }
 
+/* etichette della legenda */
 .chart-legend-item .label {
-    -fx-text-fill: white;            /* etichette della legenda */
+    -fx-text-fill: white;            
 }
 
 /* pie-chart proprietà varie */
@@ -28,7 +33,13 @@
 }
 
 /* testo etichette pie + legenda bianco */
-.chart-pie-label { -fx-fill: white; -fx-font-weight: bold; }
-.chart-legend-item .label { -fx-text-fill: white; }
+.chart-pie-label { 
+    -fx-fill: white; 
+    fill: white; 
+    -fx-font-weight: bold; 
+    font-weight: bold;
+}
+.chart-legend-item .label { 
+    -fx-text-fill: white; 
+}
 
-/* mantenere le altre regole già presenti */
