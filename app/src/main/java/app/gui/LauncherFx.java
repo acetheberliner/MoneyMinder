@@ -16,7 +16,7 @@ public final class LauncherFx extends Application {
         Parent root = FXMLLoader.load(getClass().getResource("/MainView.fxml"));
 
         /* scena + CSS custom */
-        Scene scene = new Scene(root, 1200, 800);
+        Scene scene = new Scene(root, 1280, 720);
         
         new JMetro(Style.DARK).setScene(scene);
 
