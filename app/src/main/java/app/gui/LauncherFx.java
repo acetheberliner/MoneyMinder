@@ -18,7 +18,7 @@ public final class LauncherFx extends Application {
         /* scena + CSS custom */
         Scene scene = new Scene(root, 1280, 720);
         
-        new JMetro(Style.DARK).setScene(scene);
+        new JMetro(Style.LIGHT).setScene(scene);
 
         scene.getStylesheets().add(
             getClass().getResource("/style.css").toExternalForm()

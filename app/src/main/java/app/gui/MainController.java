@@ -77,6 +77,13 @@ public final class MainController {
         master.setAll(service.list());
         table.setItems(view);
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        table.setRowFactory(tv -> new TableRow<>() {
+            @Override protected void updateItem(Transaction t, boolean empty) {
+                super.updateItem(t, empty);
+                getStyleClass().remove("card");          // reset
+                if (!empty) getStyleClass().add("card"); // applica stile card
+            }
+        });
 
         cbFilterCat.getItems().add(null);
         cbFilterCat.getItems().addAll(Category.values());
