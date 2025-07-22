@@ -76,4 +76,9 @@ public final class TransactionService {
         cache.addAll(txs);
         persist();
     }
+
+    public void replace(Transaction orig, Transaction edited) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'replace'");
+    }
 }

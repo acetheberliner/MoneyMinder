@@ -13,6 +13,7 @@
     <top>
         <ToolBar>
             <Button text="Aggiungi" onAction="#onAdd"/>
+            <Button text="Modifica" fx:id="btnEdit" onAction="#onEdit"/>
             <Button text="Rimuovi" onAction="#onRemove"/>
 
             <Separator orientation="VERTICAL"/>
@@ -29,7 +30,7 @@
             
             <Separator orientation="VERTICAL"/>
             
-            <Button text="Esporta CSV" styleClass="csv" onAction="#onExport"/>
+            <Button text="Esporta Excel" styleClass="csv" onAction="#onExportXlsx"/>
         </ToolBar>
     </top>
 

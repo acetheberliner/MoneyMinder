@@ -28,6 +28,18 @@ public final class MainController {
     @FXML private ComboBox<TxType>   cbFilterType;
     @FXML private PieChart pieIncome,pieExpense;
     @FXML private Label lblSaldo;
+    @FXML private Button btnEdit;
+
+    @FXML private void onEdit() {
+        Transaction orig = table.getSelectionModel().getSelectedItem();
+        if (orig == null) return;
+
+        TransactionDialog.show(orig).ifPresent(edited -> {
+            int idx = master.indexOf(orig);
+            master.set(idx, edited);              // sostituisce in tabella
+            service.replace(orig, edited);        // salva su disco
+        });
+    }
 
     private final TransactionService service = new TransactionService(
             new JsonTransactionDao(new File(System.getProperty("user.home"), ".money-minder.json")));
@@ -84,6 +96,23 @@ public final class MainController {
                 if (!empty) getStyleClass().add("card"); // applica stile card
             }
         });
+
+        table.setRowFactory(tv -> {
+            TableRow<Transaction> row = new TableRow<>() {
+                @Override protected void updateItem(Transaction t, boolean empty) {
+                    super.updateItem(t, empty);
+                    getStyleClass().remove("card");
+                    if (!empty) getStyleClass().add("card");
+                }
+            };
+            row.setOnMouseClicked(ev -> {
+                if (ev.getClickCount() == 2 && !row.isEmpty()) onEdit();
+            });
+            return row;
+        });
+
+        btnEdit.disableProperty().bind(
+        table.getSelectionModel().selectedItemProperty().isNull());
 
         cbFilterCat.getItems().add(null);
         cbFilterCat.getItems().addAll(Category.values());
@@ -169,17 +198,62 @@ public final class MainController {
     }
 
     /* export */
-    @FXML private void onExport(){
-        FileChooser fc=new FileChooser();
-        fc.setInitialFileName("money-"+currentMonth()+".csv");
-        File f=fc.showSaveDialog(table.getScene().getWindow());
-        if(f==null) return;
-        try(PrintWriter pw=new PrintWriter(f, StandardCharsets.UTF_8)){
-            pw.println("data,tipo,categoria,importo,descrizione");
-            view.forEach(t->pw.printf("%s,%s,%s,%s,%s%n",
-                    t.date(),t.type(),t.category(),t.amount(),t.description()));
-        }catch(IOException e){
-            new Alert(Alert.AlertType.ERROR,"Errore salvataggio CSV").showAndWait();
+    @FXML private void onExportXlsx() {
+        FileChooser fc = new FileChooser();
+        fc.setInitialFileName("MoneyMinder-" + currentMonth() + ".xlsx");
+        fc.getExtensionFilters().add(
+            new FileChooser.ExtensionFilter("Excel (*.xlsx)", "*.xlsx"));
+        File file = fc.showSaveDialog(table.getScene().getWindow());
+        if (file == null) return;
+
+        try (org.apache.poi.xssf.usermodel.XSSFWorkbook wb = new org.apache.poi.xssf.usermodel.XSSFWorkbook()) {
+
+            var sheet = wb.createSheet("Transazioni");
+
+            /* ---- stili ---- */
+            var headerFont = wb.createFont();
+            headerFont.setBold(true);
+            var headerStyle = wb.createCellStyle();
+            headerStyle.setFont(headerFont);
+
+            var moneyStyle = wb.createCellStyle();
+            var fmt = wb.createDataFormat();
+            moneyStyle.setDataFormat(fmt.getFormat("€#,##0.00"));
+
+            /* ---- intestazioni ---- */
+            String[] cols = {"Data", "Tipo", "Categoria", "Importo", "Descrizione"};
+            var row0 = sheet.createRow(0);
+            for (int i = 0; i < cols.length; i++) {
+                var c = row0.createCell(i);
+                c.setCellValue(cols[i]);
+                c.setCellStyle(headerStyle);
+            }
+
+            /* ---- righe ---- */
+            int r = 1;
+            for (Transaction t : view) {          // solo righe filtrate
+                var row = sheet.createRow(r++);
+                row.createCell(0).setCellValue(t.date().toString());
+                row.createCell(1).setCellValue(t.type().toString());
+                row.createCell(2).setCellValue(t.category().name());
+
+                var cImporto = row.createCell(3);
+                cImporto.setCellValue(t.amount().value().doubleValue());
+                cImporto.setCellStyle(moneyStyle);
+
+                row.createCell(4).setCellValue(t.description());
+            }
+
+            /* larghezza automatica colonne */
+            for (int i = 0; i < cols.length; i++) sheet.autoSizeColumn(i);
+
+            /* salva su disco */
+            try (var out = new java.io.FileOutputStream(file)) { wb.write(out); }
+
+        } catch (Exception ex) {
+            new Alert(Alert.AlertType.ERROR,
+                    "Errore durante l’esportazione Excel:\n" + ex.getMessage())
+                .showAndWait();
         }
     }
 }
