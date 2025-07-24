@@ -2,31 +2,28 @@
 
 ### Deliverable
 - [ ] Fat-jar `money-minder-all.jar`  
-- [ ] Tag `v0.1-cli-json`
-
-## Sprint 3 – Opzionali **(scegli ordine)**
-- [ ] Budget per categoria (observer)  
-- [ ] Import/Export CSV  
-- [ ] Statistiche grafiche (JavaFX Pie/Bar)  
-- [ ] SQLite backend (SqliteDao)  
-- [ ] Report annuale  
-- [ ] Multivaluta (ExchangeRateProvider)
 
 -------------------------------------
 
-- Categorie personalizzate
-    - Aggiungi pulsante “+ Categoria” nel dialogo (o menu).
-    - Mantieni elenco in un JSON a parte (categories.json) e ricaricalo all’avvio.
+# Work in progress
+- Possibilità di creare nuove categorie personalizzate:
+    - Aggiungi pulsante “+ Categoria” nel dialog
 
-- Report mensile completo
-    - Campo DatePicker (“mese”) sopra i grafici → al cambio mese ricalcoli.
-    - Label saldo (entrate - uscite) sotto i grafici.
+- Report mensili con:
+    - totale entrate
+    - totale uscite
+    - saldo del periodo
+    - ripartizione per categoria
 
-- Aggiornamento grafici in tempo reale
-    - Collega un ListChangeListener alla ObservableList<Transaction> del table (vedi sezione D).
+- Budget per categoria:
+    - Impostazione di un tetto di spesa mensile su una categoria e avviso al superamento
 
-- UI moderna (TabPane) – vedi sezione C.
+- Importazione da file esterni
 
-- Optional che vuoi tenere (budget, CSV, multivaluta…)
-    - Scelta minima: Budget per categoria (mostra progress bar + alert rosso).
-    - CSV import/export puoi rinviare se manca tempo.
+- Diagramma andamento del saldo nel tempo
+
+- Possibilità di registrare spese in valute diverse con conversione automatica
+
+- Riepilogo di entrate, uscite e saldo per l’intero anno con confronto ANCHE GRAFICO fra mesi
+
+- Miglioramenti significativi alla interfaccia grafica con UI moderna
