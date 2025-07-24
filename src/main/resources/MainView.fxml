@@ -17,10 +17,14 @@
             <Button text="Rimuovi" onAction="#onRemove"/>
 
             <Separator orientation="VERTICAL"/>
-            
-            <Label text="Mese:"/>
+
+            <Button text="Report" onAction="#onReport"/>
+
+            <Separator orientation="VERTICAL"/>
+
+            <Label text="Data:"/>
             <DatePicker fx:id="monthPicker"/>
-            <Button text="Aggiorna" onAction="#onMonthConfirm"/>
+            <!-- <Button text="Aggiorna" onAction="#onMonthConfirm"/> -->
             
             <Separator orientation="VERTICAL"/>
             
@@ -30,7 +34,7 @@
             
             <Separator orientation="VERTICAL"/>
             
-            <Button text="Esporta Excel" styleClass="csv" onAction="#onExportXlsx"/>
+            <Button text="Esporta" styleClass="csv" onAction="#onExportXlsx"/>
         </ToolBar>
     </top>
 

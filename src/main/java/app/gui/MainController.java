@@ -387,6 +387,12 @@ public final class MainController {
     }
     @FXML private void onMonthConfirm() { refreshCharts(currentMonth()); }
 
+    /* ─────────── report ─────────── */
+    @FXML private void onReport() {
+        var rep = service.buildReport(currentMonth());
+        MonthlyReportDialog.show(rep);
+    }
+
     /* ─────────── grafici ─────────── */
     private void refreshCharts(YearMonth ym) {
         var month = master.stream()

@@ -7,7 +7,7 @@
 
 # Work in progress
 - Possibilità di creare nuove categorie personalizzate:
-    - Aggiungi pulsante “+ Categoria” nel dialog
+    - Aggiungi pulsante “ + "" nel dialog ----------------- [ LE NUOVE CATEGORIE APPAIONO COME "ALTRO" - DA FIXARE ]
 
 - Report mensili con:
     - totale entrate

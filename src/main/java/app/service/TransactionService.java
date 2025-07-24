@@ -1,84 +1,93 @@
+/* src/main/java/app/service/TransactionService.java */
 package app.service;
 
 import app.dao.TransactionDao;
 import app.model.*;
+
 import java.time.YearMonth;
 import java.util.*;
 import java.util.stream.Collectors;
 
 public final class TransactionService {
 
+    /* ─────────────────── state ─────────────────── */
     private final TransactionDao dao;
-    private final List<Transaction> cache;
+    private final List<Transaction> cache;   // tutte le transazioni in RAM
 
     public TransactionService(TransactionDao dao) {
         this.dao = dao;
-        try { this.cache = new ArrayList<>(dao.loadAll()); }
-        catch (Exception e) { throw new RuntimeException(e); }
+        try {  // prima lettura da disco
+            this.cache = new ArrayList<>(dao.loadAll());
+        } catch (Exception ex) {
+            throw new RuntimeException("Errore caricamento dati", ex);
+        }
     }
 
-    /* ---------- API pubblica ---------- */
+    /* ─────────────────── CRUD ─────────────────── */
 
+    /** aggiunge e salva */
     public void add(Transaction tx) {
         cache.add(tx);
         persist();
     }
 
+    /** sostituisce una entry esistente con la versione editata */
+    public void replace(Transaction original, Transaction edited) {
+        int idx = cache.indexOf(original);
+        if (idx >= 0) {
+            cache.set(idx, edited);
+            persist();
+        }
+    }
+
+    /** rimpiazza l’intera collezione (usato in “Elimina”) */
+    public void replaceAll(Collection<Transaction> all) {
+        cache.clear();
+        cache.addAll(all);
+        persist();
+    }
+
+    /** lista *read-only* per la UI */
     public List<Transaction> list() {
         return Collections.unmodifiableList(cache);
     }
 
-    public MonthlyReport monthlyReport(YearMonth ym) {
-        var filtered = cache.stream()
+    /* ─────────────────── report ─────────────────── */
+
+    public MonthlyReport buildReport(YearMonth ym) {
+
+        var monthTx = cache.stream()
                 .filter(t -> YearMonth.from(t.date()).equals(ym))
                 .toList();
-        return buildReport(filtered);               // <<< qui il nuovo nome
+
+        Money in  = monthTx.stream()
+                .filter(t -> t.type() == TxType.ENTRATA)
+                .map(Transaction::amount)
+                .reduce(Money.ZERO, Money::add);
+
+        Money out = monthTx.stream()
+                .filter(t -> t.type() == TxType.USCITA)
+                .map(Transaction::amount)
+                .reduce(Money.ZERO, Money::add);
+
+        var byCat = monthTx.stream()
+                .collect(Collectors.groupingBy(
+                        t -> t.category().name(),
+                        TreeMap::new,
+                        Collectors.reducing(
+                                Money.ZERO,
+                                Transaction::amount,
+                                Money::add)));
+
+        return new MonthlyReport(in, out, byCat);
     }
 
-    /* ---------- DTO report ---------- */
-
-    public record MonthlyReport(
-            Money income,
-            Money expense,
-            Map<String, Money> byCategory
-    ) {
-        public Money balance() { return income.subtract(expense); }
-    }
-
-    /* ---------- helper interni ---------- */
+    /* ─────────────────── helper ─────────────────── */
 
     private void persist() {
         try { dao.saveAll(cache); }
-        catch (Exception e) { throw new RuntimeException(e); }
-    }
-
-    private static MonthlyReport buildReport(List<Transaction> txs) {   // <<< rename OK
-        Money income = txs.stream()
-        .filter(t -> t.type() == TxType.ENTRATA)   // prima INCOME
-        .map(Transaction::amount)
-        .reduce(Money.ZERO, Money::add);
-
-        Money expense = txs.stream()
-        .filter(t -> t.type() == TxType.USCITA)    // prima EXPENSE
-        .map(Transaction::amount)
-        .reduce(Money.ZERO, Money::add);
-
-        Map<String, Money> byCat = txs.stream().collect(Collectors.groupingBy(
-                t -> t.category().name(),
-                TreeMap::new,
-                Collectors.reducing(Money.ZERO, Transaction::amount, Money::add)
-        ));
-        return new MonthlyReport(income, expense, byCat);
-    }
-
-    public void replaceAll(Collection<Transaction> txs) {
-        cache.clear();
-        cache.addAll(txs);
-        persist();
-    }
-
-    public void replace(Transaction orig, Transaction edited) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'replace'");
+        catch (Exception ex) {
+            throw new RuntimeException("Errore salvataggio dati", ex);
+        }
     }
 }
