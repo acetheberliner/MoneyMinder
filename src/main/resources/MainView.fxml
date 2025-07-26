@@ -70,6 +70,7 @@
             </HBox>
 
             <Label fx:id="lblSaldo" alignment="CENTER"/>
+            <Button fx:id="btnTrend" text="Andamento" onAction="#onTrend" alignment="CENTER"/>
         </VBox>
     </center>
 </BorderPane>

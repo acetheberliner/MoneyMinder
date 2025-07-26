@@ -15,6 +15,9 @@ import javafx.scene.control.*;
 import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import javafx.scene.chart.LineChart;
+import javafx.scene.chart.NumberAxis;
+import javafx.scene.chart.XYChart;
 
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
@@ -38,6 +41,7 @@ public final class MainController {
     @FXML private PieChart pieIncome,pieExpense;
     @FXML private Label lblSaldo;
     @FXML private Button btnEdit;
+    @FXML private Button btnTrend;
 
     /* ─────────── costanti ─────────── */
     private static final Map<Category,String> CAT_COLOR = Map.of(
@@ -130,6 +134,14 @@ public final class MainController {
                     .showAndWait();
             }
         });
+    }
+
+    /* ─────────── trend salary ─────────── */
+    @FXML private void onTrend() {
+        TrendDialog.show(
+            (Stage) table.getScene().getWindow(),          // owner
+            master                                         // tutte le transazioni attuali
+        );
     }
 
     /* ─────────── filters ─────────── */
