@@ -389,8 +389,9 @@ public final class MainController {
 
     /* ─────────── report ─────────── */
     @FXML private void onReport() {
-        var rep = service.buildReport(currentMonth());
-        MonthlyReportDialog.show(rep);
+        var ym  = YearMonth.from(monthPicker.getValue());
+        var rep = service.monthlyReport(ym);
+        MonthlyReportDialog.show((javafx.stage.Stage) table.getScene().getWindow(), ym, rep); //cast esplicito
     }
 
     /* ─────────── grafici ─────────── */
@@ -508,21 +509,11 @@ public final class MainController {
         colorSlices(data, d->CAT_COLOR.getOrDefault(Category.valueOf(d.getName().split(" ")[0]),"#aaaaaa"));
         return data;
     }
-    private void colorSlices(ObservableList<PieChart.Data> data, Function<PieChart.Data,String> colorFn) {
-
-        data.forEach(d -> {
-            // se la Node c'è già la coloriamo subito...
-            if (d.getNode() != null) {
-                d.getNode().setStyle("-fx-pie-color:" + colorFn.apply(d));
-            } else {
-                // ...altrimenti aspettiamo che venga creata
-                d.nodeProperty().addListener((obs, oldN, newN) -> {
-                    if (newN != null) {
-                        newN.setStyle("-fx-pie-color:" + colorFn.apply(d));
-                    }
-                });
-            }
-        });
+    private void colorSlices(ObservableList<PieChart.Data> data, java.util.function.Function<PieChart.Data,String> fn) {
+        javafx.application.Platform.runLater(() -> data.forEach(d -> {
+            if (d.getNode() != null)
+                d.getNode().setStyle("-fx-pie-color:" + fn.apply(d) + ';');
+        }));
     }
 
     private String incomeColor(String key) {

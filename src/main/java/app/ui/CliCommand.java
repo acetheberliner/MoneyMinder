@@ -81,32 +81,33 @@ public final class CliCommand implements Callable<Integer> {
         }
     }
 
-    /* --------------- report --------------- */
-    @Command(name = "report",
-            description = "Report mensile (formato yyyy-MM, default mese corrente)")
-    static class Report implements Callable<Integer> {
+    /* --------------------- report -------------------- */
+@Command(name = "report",
+         description = "Report mensile (formato yyyy-MM, default mese corrente)")
+static class Report implements Callable<Integer> {
 
-        @Parameters(index = "0", arity = "0..1")
-        String month;                         // es. 2025-07
+    @Parameters(index = "0", arity = "0..1",
+                description = "Mese da analizzare (yyyy-MM)",
+                defaultValue = "")
+    String month;
 
-        @Override public Integer call() {
-            YearMonth ym = month == null
-                    ? YearMonth.now()
-                    : YearMonth.parse(month);
+    @Override public Integer call() {
+        YearMonth ym = month.isBlank() ? YearMonth.now()
+                                       : YearMonth.parse(month);
 
-            var rep = SERVICE.buildReport(ym);        // ← OK
+        var rep = SERVICE.monthlyReport(ym);
 
-            System.out.printf("%n=== Report %s ===%n", ym);
-            System.out.printf(" Entrate : %s%n Uscite  : %s%n Saldo   : %s%n",
-                    rep.totalIncome(),                // <-- nuovo accessor
-                    rep.totalExpense(),               // <-- nuovo accessor
-                    rep.balance());
+        System.out.printf("%n=== Report %s ===%n", ym);
+        System.out.printf(" Entrate : %s%n Uscite  : %s%n Saldo   : %s%n",
+                rep.totaleEntrate(), rep.totaleUscite(), rep.saldo());
 
-            System.out.println(" Ripartizione uscite:");
-            rep.byCategory().forEach((k, v) ->
-                    System.out.printf("   %-15s %s%n", k, v));
-            return 0;
-        }
+        System.out.println(" Uscite per categoria:");
+        rep.perCategoria().forEach((k, v) ->
+                System.out.printf("   %-15s %s%n", k, v));
+
+        return 0;
     }
+}
+
 
 }

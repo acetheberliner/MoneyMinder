@@ -52,35 +52,37 @@ public final class TransactionService {
         return Collections.unmodifiableList(cache);
     }
 
+    public MonthlyReport monthlyReport(YearMonth ym) {
+    var filtered = cache.stream()
+                        .filter(t -> YearMonth.from(t.date()).equals(ym))
+                        .toList();
+    return buildReport(ym, filtered);      // ora combacia
+}
+
     /* ─────────────────── report ─────────────────── */
 
-    public MonthlyReport buildReport(YearMonth ym) {
+    private static MonthlyReport buildReport(YearMonth ym,
+                                            List<Transaction> txs) {
 
-        var monthTx = cache.stream()
-                .filter(t -> YearMonth.from(t.date()).equals(ym))
-                .toList();
+        Money in  = txs.stream()
+                    .filter(t -> t.type() == TxType.ENTRATA)
+                    .map(Transaction::amount)
+                    .reduce(Money.ZERO, Money::add);
 
-        Money in  = monthTx.stream()
-                .filter(t -> t.type() == TxType.ENTRATA)
-                .map(Transaction::amount)
-                .reduce(Money.ZERO, Money::add);
+        Money out = txs.stream()
+                    .filter(t -> t.type() == TxType.USCITA)
+                    .map(Transaction::amount)
+                    .reduce(Money.ZERO, Money::add);
 
-        Money out = monthTx.stream()
-                .filter(t -> t.type() == TxType.USCITA)
-                .map(Transaction::amount)
-                .reduce(Money.ZERO, Money::add);
+        Map<String, Money> byCat = txs.stream().collect(Collectors.groupingBy(
+                t -> t.category().name(),
+                TreeMap::new,
+                Collectors.reducing(Money.ZERO, Transaction::amount, Money::add)
+        ));
 
-        var byCat = monthTx.stream()
-                .collect(Collectors.groupingBy(
-                        t -> t.category().name(),
-                        TreeMap::new,
-                        Collectors.reducing(
-                                Money.ZERO,
-                                Transaction::amount,
-                                Money::add)));
+        return new MonthlyReport(ym, in, out, in.subtract(out), byCat);
+    }               
 
-        return new MonthlyReport(in, out, byCat);
-    }
 
     /* ─────────────────── helper ─────────────────── */
 

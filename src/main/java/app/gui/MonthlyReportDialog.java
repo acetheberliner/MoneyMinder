@@ -1,54 +1,65 @@
+/* ───────── app/gui/MonthlyReportDialog.java ───────── */
 package app.gui;
 
+import app.model.Money;
 import app.model.MonthlyReport;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
-import javafx.scene.control.Label;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
-import javafx.scene.layout.*;
-import javafx.stage.Modality;
+import javafx.scene.control.*;
+import javafx.scene.layout.GridPane;
 import javafx.stage.Stage;
 
+import java.time.YearMonth;
 import java.util.Map;
 
 public final class MonthlyReportDialog {
 
-    public static void show(MonthlyReport rep) {
+    /**
+     * Mostra una finestra non modale con il riepilogo del mese scelto.
+     *
+     * @param owner finestra chiamante
+     * @param ym    mese di riferimento
+     * @param rep   DTO prodotto dal TransactionService
+     */
+    public static void show(Stage owner, YearMonth ym, MonthlyReport rep) {
 
-        /* ---- totali ---- */
-        Label lblIn  = new Label("Entrate:  " + rep.totaleEntrate());
-        Label lblOut = new Label("Uscite:   " + rep.totaleEntrate());
-        Label lblSal = new Label("Saldo:    " + rep.saldo());
-        lblIn .setStyle("-fx-font-size:14; -fx-text-fill:#4caf50;");
-        lblOut.setStyle("-fx-font-size:14; -fx-text-fill:#e53935;");
-        lblSal.setStyle("-fx-font-size:16; -fx-font-weight:bold;");
+        /* ---- riepilogo numerico ---- */
+        GridPane gp = new GridPane();
+        gp.setHgap(8);
+        gp.setVgap(8);
+        gp.setPadding(new Insets(15));
 
-        VBox totals = new VBox(6, lblIn, lblOut, lblSal);
+        gp.addColumn(0,
+                new Label("Entrate :  " + rep.totaleEntrate()),
+                new Label("Uscite  :  " + rep.totaleUscite()),
+                new Label("Saldo   :  " + rep.saldo())
+        );
 
         /* ---- tabella per categoria ---- */
-        TableView<Map.Entry<String, ?>> tbl = new TableView<>();
-        tbl.setPrefHeight(260);
+        TableView<Map.Entry<String, Money>> tbl = new TableView<>();
+        TableColumn<Map.Entry<String, Money>, String> colCat = new TableColumn<>("Categoria");
+        TableColumn<Map.Entry<String, Money>, String> colTot = new TableColumn<>("Totale");
 
-        TableColumn<Map.Entry<String, ?>, String> colCat = new TableColumn<>("Categoria");
-        colCat.setCellValueFactory(c -> new javafx.beans.property.SimpleStringProperty(c.getValue().getKey()));
+        colCat.setCellValueFactory(e ->
+                new SimpleStringProperty(e.getValue().getKey()));
+        colTot.setCellValueFactory(e ->
+                new SimpleStringProperty(e.getValue().getValue().toString()));
 
-        TableColumn<Map.Entry<String, ?>, String> colVal = new TableColumn<>("Importo");
-        colVal.setCellValueFactory(c -> new javafx.beans.property.SimpleStringProperty(c.getValue().getValue().toString()));
-
-        tbl.getColumns().addAll(colCat, colVal);
+        tbl.getColumns().setAll(colCat, colTot);
         tbl.getItems().setAll(rep.perCategoria().entrySet());
+        tbl.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
-        /* ---- layout finestra ---- */
-        VBox root = new VBox(12, totals, tbl);
-        root.setPadding(new Insets(20));
+        gp.add(tbl, 1, 0, 1, 3);
 
+        /* ---- stage ---- */
         Stage st = new Stage();
-        st.initModality(Modality.APPLICATION_MODAL);
-        st.setTitle("Report " + rep.month());
-        st.setScene(new Scene(root, 300, 380));
-        st.showAndWait();
+        st.initOwner(owner);
+        st.setTitle("Report " + ym);
+        st.setScene(new Scene(gp, 550, 320));
+        st.show();
     }
 
+    /* utility-class */
     private MonthlyReportDialog() {}
 }

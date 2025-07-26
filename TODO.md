@@ -9,7 +9,7 @@
 - Possibilità di creare nuove categorie personalizzate:
     - Aggiungi pulsante “ + "" nel dialog ----------------- [ LE NUOVE CATEGORIE APPAIONO COME "ALTRO" - DA FIXARE ]
 
-- Report mensili con:
+- Report mensili con: --------------------- [ FATTO ]
     - totale entrate
     - totale uscite
     - saldo del periodo
@@ -27,3 +27,8 @@
 - Riepilogo di entrate, uscite e saldo per l’intero anno con confronto ANCHE GRAFICO fra mesi
 
 - Miglioramenti significativi alla interfaccia grafica con UI moderna
+
+# fix
+
+- search not filtering
+- custom category show
