@@ -12,6 +12,10 @@
     <!-- ───────── Toolbar ───────── -->
     <top>
         <ToolBar>
+            <Button text="Opzioni" onAction="#onOptions"/>
+
+            <Separator orientation="VERTICAL"/>
+
             <Button text="Aggiungi" onAction="#onAdd"/>
             <Button text="Modifica" fx:id="btnEdit" onAction="#onEdit"/>
             <Button text="Rimuovi" onAction="#onRemove"/>

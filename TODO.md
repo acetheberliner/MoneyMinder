@@ -32,3 +32,4 @@
 
 - search not filtering
 - custom category show
+- salary selection turns off "expense" choice
