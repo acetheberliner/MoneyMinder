@@ -5,9 +5,7 @@
 <?import javafx.scene.chart.PieChart?>
 <?import javafx.geometry.Insets?>           <!--  IMPORT MANcante  -->
 
-<BorderPane xmlns:fx="http://javafx.com/fxml"
-            fx:controller="app.gui.MainController"
-            prefWidth="1250" prefHeight="720">
+<BorderPane xmlns:fx="http://javafx.com/fxml" fx:controller="app.gui.MainController" prefWidth="1250" prefHeight="720">
 
     <!-- ───────── Toolbar ───────── -->
     <top>
@@ -28,8 +26,7 @@
 
             <Label text="Data:"/>
             <DatePicker fx:id="monthPicker"/>
-            <!-- <Button text="Aggiorna" onAction="#onMonthConfirm"/> -->
-            
+                        
             <Separator orientation="VERTICAL"/>
             
             <TextField fx:id="txtSearch" promptText="Cerca..."/>
@@ -45,8 +42,6 @@
     <!-- ───────── Contenuto ───────── -->
     <center>
         <VBox spacing="15" styleClass="card-area" VBox.vgrow="ALWAYS">
-
-            <!-- padding corretto -->
             <padding>
                 <Insets top="15" right="15" bottom="15" left="15"/>
             </padding>

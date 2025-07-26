@@ -46,7 +46,7 @@ tasks.test { useJUnitPlatform() }
 /* ---------- Shadow fat-jar ---------- */
 tasks.named<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("shadowJar") {
     archiveBaseName.set("app")
-    archiveClassifier.set("")                           // app-1.1.0-all.jar
+    archiveClassifier.set("") // app-1.1.0-all.jar
     mergeServiceFiles()
 }
 
@@ -54,10 +54,10 @@ tasks.named<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("shadowJ
 jlink {
     imageName.set("MoneyMinder")
     options.set(listOf("--strip-debug", "--compress=2", "--no-header-files"))
-    launcher {                       // → bin/moneyminder
+    launcher {
         name = "moneyminder"
     }
-    addExtraDependencies("javafx")    // porta dentro le native-libs JavaFX
+    addExtraDependencies("javafx") // native-libs JavaFX
 }
 
 tasks.withType<JavaCompile> {
@@ -65,8 +65,6 @@ tasks.withType<JavaCompile> {
 }
 
 tasks.named<JavaExec>("run") {
-
-    /* --- costruisci il module-path con TUTTO ciò che c’è in runtimeClasspath --- */
     val mp = configurations.runtimeClasspath.get()
         .joinToString(File.pathSeparator) { it.absolutePath }
 

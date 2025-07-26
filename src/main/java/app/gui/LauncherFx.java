@@ -9,10 +9,8 @@ import jfxtras.styles.jmetro.JMetro;
 import jfxtras.styles.jmetro.Style;
 
 public final class LauncherFx extends Application {
-
     @Override
     public void start(Stage stage) throws Exception {
-        /* carica FXML */
         Parent root = FXMLLoader.load(getClass().getResource("/MainView.fxml"));
 
         /* scena + CSS custom */
@@ -27,7 +25,6 @@ public final class LauncherFx extends Application {
         /* window */
         stage.setTitle("MoneyMinder");
         stage.setScene(scene);
-
         stage.setResizable(true);
 
         stage.show();

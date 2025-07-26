@@ -10,9 +10,9 @@ import java.util.stream.Collectors;
 
 public final class TransactionService {
 
-    /* ─────────────────── state ─────────────────── */
+    /* ─────────────────── stato ─────────────────── */
     private final TransactionDao dao;
-    private final List<Transaction> cache;   // tutte le transazioni in RAM
+    private final List<Transaction> cache;
 
     public TransactionService(TransactionDao dao) {
         this.dao = dao;
@@ -24,8 +24,6 @@ public final class TransactionService {
     }
 
     /* ─────────────────── CRUD ─────────────────── */
-
-    /** aggiunge e salva */
     public void add(Transaction tx) {
         cache.add(tx);
         persist();
@@ -36,58 +34,54 @@ public final class TransactionService {
         int idx = cache.indexOf(original);
         if (idx >= 0) {
             cache.set(idx, edited);
+
             persist();
         }
     }
 
-    /** rimpiazza l’intera collezione (usato in “Elimina”) */
+    /** rimpiazza l’intera collezione */
     public void replaceAll(Collection<Transaction> all) {
         cache.clear();
         cache.addAll(all);
+
         persist();
     }
 
-    /** lista *read-only* per la UI */
     public List<Transaction> list() {
         return Collections.unmodifiableList(cache);
     }
 
     public MonthlyReport monthlyReport(YearMonth ym) {
-    var filtered = cache.stream()
-                        .filter(t -> YearMonth.from(t.date()).equals(ym))
-                        .toList();
-    return buildReport(ym, filtered);      // ora combacia
-}
+        var filtered = cache.stream().filter(t -> YearMonth.from(t.date()).equals(ym)).toList();
+        
+        return buildReport(ym, filtered);
+    }
 
     /* ─────────────────── report ─────────────────── */
-
-    private static MonthlyReport buildReport(YearMonth ym,
-                                            List<Transaction> txs) {
-
+    private static MonthlyReport buildReport(YearMonth ym, List<Transaction> txs) {
         Money in  = txs.stream()
-                    .filter(t -> t.type() == TxType.ENTRATA)
-                    .map(Transaction::amount)
-                    .reduce(Money.ZERO, Money::add);
+            .filter(t -> t.type() == TxType.ENTRATA)
+            .map(Transaction::amount)
+            .reduce(Money.ZERO, Money::add);
 
         Money out = txs.stream()
-                    .filter(t -> t.type() == TxType.USCITA)
-                    .map(Transaction::amount)
-                    .reduce(Money.ZERO, Money::add);
+            .filter(t -> t.type() == TxType.USCITA)
+            .map(Transaction::amount)
+            .reduce(Money.ZERO, Money::add);
 
         Map<String, Money> byCat = txs.stream().collect(Collectors.groupingBy(
-                t -> t.category().name(),
-                TreeMap::new,
-                Collectors.reducing(Money.ZERO, Transaction::amount, Money::add)
+            t -> t.category().name(),
+            TreeMap::new,
+            Collectors.reducing(Money.ZERO, Transaction::amount, Money::add)
         ));
 
         return new MonthlyReport(ym, in, out, in.subtract(out), byCat);
     }               
 
-
     /* ─────────────────── helper ─────────────────── */
-
     private void persist() {
         try { dao.saveAll(cache); }
+        
         catch (Exception ex) {
             throw new RuntimeException("Errore salvataggio dati", ex);
         }

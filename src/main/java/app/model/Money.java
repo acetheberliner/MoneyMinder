@@ -1,17 +1,17 @@
 package app.model;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
+
 import java.util.Objects;
+import java.util.Locale;
 
 import java.text.NumberFormat;
-import java.util.Locale;
 
 /** Value Object monetario in EUR. */
 public record Money(BigDecimal value) {
 
     private static final NumberFormat IT_EUR = NumberFormat.getCurrencyInstance(Locale.ITALY);
-    static { IT_EUR.setMinimumFractionDigits(2); }   //ex.: 1 500,00 €
+    static { IT_EUR.setMinimumFractionDigits(2); }
 
     public Money {
         Objects.requireNonNull(value);

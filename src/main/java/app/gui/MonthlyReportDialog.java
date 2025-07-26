@@ -3,6 +3,7 @@ package app.gui;
 
 import app.model.Money;
 import app.model.MonthlyReport;
+
 import javafx.beans.property.SimpleStringProperty;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
@@ -14,18 +15,10 @@ import java.time.YearMonth;
 import java.util.Map;
 
 public final class MonthlyReportDialog {
-
-    /**
-     * Mostra una finestra non modale con il riepilogo del mese scelto.
-     *
-     * @param owner finestra chiamante
-     * @param ym    mese di riferimento
-     * @param rep   DTO prodotto dal TransactionService
-     */
     public static void show(Stage owner, YearMonth ym, MonthlyReport rep) {
-
         /* ---- riepilogo numerico ---- */
         GridPane gp = new GridPane();
+
         gp.setHgap(8);
         gp.setVgap(8);
         gp.setPadding(new Insets(15));
@@ -41,25 +34,24 @@ public final class MonthlyReportDialog {
         TableColumn<Map.Entry<String, Money>, String> colCat = new TableColumn<>("Categoria");
         TableColumn<Map.Entry<String, Money>, String> colTot = new TableColumn<>("Totale");
 
-        colCat.setCellValueFactory(e ->
-                new SimpleStringProperty(e.getValue().getKey()));
-        colTot.setCellValueFactory(e ->
-                new SimpleStringProperty(e.getValue().getValue().toString()));
+        colCat.setCellValueFactory(e -> new SimpleStringProperty(e.getValue().getKey()));
+        colTot.setCellValueFactory(e -> new SimpleStringProperty(e.getValue().getValue().toString()));
 
-        tbl.getColumns().setAll(colCat, colTot);
+        tbl.getColumns().clear();
+
+        java.util.Collections.addAll(tbl.getColumns(), colCat, colTot);
         tbl.getItems().setAll(rep.perCategoria().entrySet());
-        tbl.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        tbl.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
 
         gp.add(tbl, 1, 0, 1, 3);
 
         /* ---- stage ---- */
         Stage st = new Stage();
+
         st.initOwner(owner);
         st.setTitle("Report " + ym);
         st.setScene(new Scene(gp, 550, 320));
         st.show();
     }
-
-    /* utility-class */
     private MonthlyReportDialog() {}
 }

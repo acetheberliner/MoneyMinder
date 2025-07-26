@@ -1,4 +1,3 @@
-// Category.java
 package app.model;
 
 import com.fasterxml.jackson.annotation.JsonAlias;

@@ -9,6 +9,4 @@ public record MonthlyReport(
         Money      totaleUscite,
         Money      saldo,
         Map<String, Money> perCategoria
-) {
-
-}
+) {}
