@@ -42,6 +42,8 @@ public final class MainController {
     @FXML private Label lblSaldo;
     @FXML private Button btnEdit;
     @FXML private Button btnTrend;
+    @FXML private Label lblTotIncome;
+    @FXML private Label lblTotExpense;
 
     /* ─────────── costanti ─────────── */
     private static final Map<Category,String> CAT_COLOR = Map.of(
@@ -181,10 +183,14 @@ public final class MainController {
         Money totIn  = sum(month, TxType.ENTRATA);
         Money totOut = sum(month, TxType.USCITA);
 
+        lblTotIncome.setText("Entrate: " + totIn);
+        lblTotExpense.setText("Uscite : " + totOut);
         lblSaldo.setText("Saldo: " + totIn.subtract(totOut));
 
         pieIncome.setData(buildIncomeData(month));
+        pieIncome.setLegendVisible(false);
         pieExpense.setData(buildExpenseData(month));
+        pieExpense.setLegendVisible(false);
     }
 
     /* ─────────── export excel ─────────── */

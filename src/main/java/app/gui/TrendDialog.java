@@ -22,19 +22,20 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public final class TrendDialog {
-    private enum Gran { QUOTIDIANA, MENSILE, ANNUALE }
+    private enum Gran { Giornaliero, Mensile, Annuale }
 
     private static final String COLOR = "#2196f3";
     private static final NumberFormat EUR = NumberFormat.getCurrencyInstance(Locale.ITALY);
 
     public static void show(Stage owner, List<Transaction> txs) {
         ChoiceBox<Gran> cb = new ChoiceBox<>(FXCollections.observableArrayList(Gran.values()));
-        cb.getSelectionModel().select(Gran.QUOTIDIANA);
+        cb.getSelectionModel().select(Gran.Giornaliero);
 
         NumberAxis y = new NumberAxis();
         CategoryAxis x = new CategoryAxis();
 
         LineChart<String, Number> chart = new LineChart<>(x, y);
+        chart.setAnimated(false);
         chart.setLegendVisible(false);
 
         cb.getSelectionModel().selectedItemProperty().addListener((o, old, g) -> refresh(chart, txs, g));
@@ -50,7 +51,7 @@ public final class TrendDialog {
         st.setTitle("Andamento saldo");
         st.setScene(new Scene(root, 680, 420));
 
-        refresh(chart, txs, Gran.QUOTIDIANA);
+        refresh(chart, txs, Gran.Giornaliero);
 
         st.show();
     }
@@ -59,7 +60,7 @@ public final class TrendDialog {
     private static void refresh(LineChart<String, Number> chart, List<Transaction> txs, Gran g) {
         XYChart.Series<String, Number> s = buildSeries(txs, g);
         chart.setData(FXCollections.observableArrayList(s));
-        chart.setTitle("Andamento saldo - " + g.name().toLowerCase());
+        chart.setTitle("Andamento saldo - " + g.name());
 
         // stile linea + marker azzurro
         Platform.runLater(() -> {
@@ -92,9 +93,9 @@ public final class TrendDialog {
     /* ----------------- Serie cumulativa saldo ----------------- */
     private static XYChart.Series<String, Number> buildSeries(List<Transaction> txs, Gran g) {
         Map<String, Money> map = switch (g) {
-            case QUOTIDIANA -> group(txs, t -> t.date().toString());
-            case MENSILE   -> group(txs, t -> YearMonth.from(t.date()).toString());
-            case ANNUALE   -> group(txs, t -> Year.from(t.date()).toString());
+            case Giornaliero -> group(txs, t -> t.date().toString());
+            case Mensile   -> group(txs, t -> YearMonth.from(t.date()).toString());
+            case Annuale   -> group(txs, t -> Year.from(t.date()).toString());
         };
 
         Money running = Money.ZERO;

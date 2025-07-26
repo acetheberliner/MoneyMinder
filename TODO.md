@@ -2,24 +2,24 @@
 
 # fix
 - search not filtering
-- custom category show
+- custom category show in history
 - salary selection turns off "expense" choice
-- legend colors
+- legend colors [DONE]
 
 # Work in progress
 - Possibilità di creare nuove categorie personalizzate:
-    - Aggiungi pulsante “ + "" nel dialog ----------------- [ FATTO ]
+    - Aggiungi pulsante “ + "" nel dialog ----------------- [DONE]
 
-- Report mensili con: --------------------- [ FATTO ]
+- Report mensili con: --------------------- [DONE]
     - totale entrate
     - totale uscite
     - saldo del periodo
     - ripartizione per categoria
 
-- Budget per categoria: --------------------- [ FATTO ]
+- Budget per categoria: --------------------- [DONE]
     - Impostazione di un tetto di spesa mensile su una categoria e avviso al superamento
 
-- Diagramma andamento del saldo nel tempo
+- Diagramma andamento del saldo nel tempo --------------------- [DONE]
 
 - Possibilità di registrare spese in valute diverse con conversione automatica
 
