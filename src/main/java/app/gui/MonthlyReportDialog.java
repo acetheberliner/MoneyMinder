@@ -50,7 +50,7 @@ public final class MonthlyReportDialog {
 
         st.initOwner(owner);
         st.setTitle("Report " + ym);
-        st.setScene(new Scene(gp, 550, 320));
+        st.setScene(new Scene(gp, 450, 320));
         st.show();
     }
     private MonthlyReportDialog() {}

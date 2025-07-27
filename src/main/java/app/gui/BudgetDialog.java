@@ -40,7 +40,7 @@ public final class BudgetDialog {
 
         st.initOwner(owner);
         st.setTitle("Budget mensile per categoria");
-        st.setScene(new Scene(new ScrollPane(gp), 320, 320));
+        st.setScene(new Scene(new ScrollPane(gp), 350, 320));
 
         st.show();
     }

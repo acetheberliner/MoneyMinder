@@ -49,7 +49,7 @@ public final class TrendDialog {
         st.initOwner(owner);
         st.initModality(Modality.WINDOW_MODAL);
         st.setTitle("Andamento saldo");
-        st.setScene(new Scene(root, 680, 420));
+        st.setScene(new Scene(root, 850, 420));
 
         refresh(chart, txs, Gran.Giornaliero);
 

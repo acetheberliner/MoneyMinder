@@ -20,7 +20,7 @@ public record Money(BigDecimal value) {
     public Money add(Money o)      { return new Money(value.add(o.value)); }
     public Money subtract(Money o) { return new Money(value.subtract(o.value)); }
     public Money negate() { return new Money(value.negate()); }
-
+    public static Money of(BigDecimal v) { return new Money(v); }
     
     @Override public String toString() { return IT_EUR.format(value); }
 

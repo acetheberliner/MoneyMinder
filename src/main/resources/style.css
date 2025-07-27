@@ -154,3 +154,13 @@
     -fx-font-weight: 700; 
     -fx-text-fill: PRIMARY;
 }
+
+.chart-container {
+    -fx-background-color: BACK;
+    background-color: BACK;
+    -fx-padding: 10;
+    padding: 10px;
+    border: 1px solid black;
+    -fx-border-radius: 8;
+    border-radius: 8px;
+}

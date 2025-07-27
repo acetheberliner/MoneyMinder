@@ -10,7 +10,7 @@
     <!-- ───────── Toolbar ───────── -->
     <top>
         <ToolBar>
-            <Button text="Opzioni" onAction="#onOptions"/>
+            <Button text="Budget" onAction="#onOptions"/>
 
             <Separator orientation="VERTICAL"/>
 
@@ -24,12 +24,19 @@
 
             <Separator orientation="VERTICAL"/>
 
+            <Button text="Aggiorna" onAction="#applyFilters"/>
+
+            <Separator orientation="VERTICAL"/>
+
             <Label text="Data:"/>
             <DatePicker fx:id="monthPicker"/>
                         
             <Separator orientation="VERTICAL"/>
             
             <TextField fx:id="txtSearch" promptText="Cerca..."/>
+
+            <Separator orientation="VERTICAL"/>
+            
             <ComboBox fx:id="cbFilterCat" promptText="Categoria" onAction="#applyFilters"/>
             <ComboBox fx:id="cbFilterType" promptText="Tipo" onAction="#applyFilters"/>
             

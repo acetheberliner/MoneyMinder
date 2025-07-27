@@ -2,7 +2,7 @@
 package app.gui;
 
 import app.model.*;
-
+import app.service.CurrencyConverter;
 import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
@@ -10,6 +10,7 @@ import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Optional;
 import java.util.regex.Pattern;
@@ -30,7 +31,7 @@ public final class TransactionDialog {
 
         ComboBox<TxType> cbType = new ComboBox<>();
         cbType.getItems().addAll(TxType.values());
-        cbType.getSelectionModel().select(original == null ? TxType.ENTRATA : original.type());
+        cbType.getSelectionModel().select(original == null ? null : original.type());
 
         /* ---------- categorie ---------- */
         ComboBox<String> cbCat = new ComboBox<>();
@@ -65,7 +66,12 @@ public final class TransactionDialog {
         tfAmount.setPromptText("es. 12,50");
 
         TextField tfDesc = new TextField(original == null ? "" : original.description());
-        tfDesc.setPromptText("Descrizione");
+        tfDesc.setPromptText("es. Bolletta Luglio 2025");
+
+        /* ---------- valuta ---------- */
+        ComboBox<String> cbCur = new ComboBox<>();
+        cbCur.getItems().addAll("EUR", "USD", "GBP", "CHF");
+        cbCur.getSelectionModel().select("EUR");
 
         /* ---------- layout ---------- */
         GridPane gp = new GridPane();
@@ -74,8 +80,27 @@ public final class TransactionDialog {
         gp.addRow(0, new Label("Data"), dpDate);
         gp.addRow(1, new Label("Tipo"), cbType);
         gp.addRow(2, new Label("Categoria"), new HBox(5, cbCat, btnAddCat));
-        gp.addRow(3, new Label("Importo (€)"), tfAmount);
-        gp.addRow(4, new Label("Descrizione"), tfDesc);
+        gp.addRow(3, new Label("Importo"), tfAmount);
+        gp.addRow(4, new Label("Valuta"), cbCur); 
+        gp.addRow(6, new Label("Descrizione"), tfDesc);
+
+        /* --------- anteprima € --------- */
+        Label lblPreview = new Label();
+        gp.add(lblPreview, 1, 5);
+
+        Runnable refreshPreview = () -> {
+            String txt = tfAmount.getText().strip().replace(',', '.');
+            if (txt.matches("\\d+(?:[.]\\d{1,2})?")) {
+                BigDecimal val = new BigDecimal(txt);
+                BigDecimal eur = CurrencyConverter.toEur(val, cbCur.getValue());
+                lblPreview.setText("≈ " + Money.of(eur));
+            } else {
+                lblPreview.setText("");
+            }
+        };
+        tfAmount.textProperty().addListener((o, oldV, newV) -> refreshPreview.run());
+        cbCur.valueProperty().addListener((o, oldV, newV) -> refreshPreview.run());
+        refreshPreview.run();
 
         dlg.getDialogPane().setContent(gp);
 
@@ -91,6 +116,10 @@ public final class TransactionDialog {
             if (bt != ButtonType.OK) return null;
 
             String raw = tfAmount.getText().strip().replace(',', '.');
+
+            BigDecimal value = new BigDecimal(raw);
+            BigDecimal inEuro = CurrencyConverter.toEur(value, cbCur.getValue());
+
             String catName = cbCat.getValue();
             Category cat;
 
@@ -101,7 +130,7 @@ public final class TransactionDialog {
                 dpDate.getValue(),
                 tfDesc.getText().strip(),
                 cat,
-                Money.of(raw),
+                Money.of(inEuro),
                 cbType.getValue()
             );
         });
