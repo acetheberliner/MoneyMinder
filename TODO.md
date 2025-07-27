@@ -5,6 +5,7 @@
 - custom category show in history
 - salary selection turns off "expense" choice
 - legend colors [DONE]
+- cerca
 
 # Work in progress
 - Possibilità di creare nuove categorie personalizzate:
@@ -21,8 +22,8 @@
 
 - Diagramma andamento del saldo nel tempo --------------------- [DONE]
 
-- Possibilità di registrare spese in valute diverse con conversione automatica
+- Possibilità di registrare spese in valute diverse con conversione automatica  --------------------- [DONE]
 
 - Riepilogo di entrate, uscite e saldo per l’intero anno con confronto ANCHE GRAFICO fra mesi
 
-- Miglioramenti significativi alla interfaccia grafica con UI moderna
+- Miglioramenti significativi alla interfaccia grafica con UI moderna  --------------------- [DONE]

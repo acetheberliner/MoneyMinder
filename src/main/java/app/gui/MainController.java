@@ -115,6 +115,10 @@ public final class MainController {
         applyFilters();
     }
 
+    @FXML private void onMonthConfirm() {           // ← SENZA parametri
+        refreshCharts(currentMonth());
+    }
+
     /* ──────── budget check ──────── */
     private void checkBudget(Transaction tx) {
         if (tx.type() != TxType.USCITA) return;

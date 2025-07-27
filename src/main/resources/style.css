@@ -1,95 +1,8 @@
-/* background */
-.root {
-    -fx-font-family: "Segoe UI", Arial, sans-serif;
-    font-family: "Segoe UI", Arial, sans-serif;
-    -fx-background-color: #f4f6f9;
-    background-color: #f4f6f9;
-}
-.tool-bar {
-    -fx-background-color: #f4f6f9;
-    background-color: #f4f6f9;
-    -fx-padding: 6 10;
-    padding: 6px 10px;
-    -fx-border-width: 0 0 1 0;
-    border-width: 0 0 1px 0;
-}
-
-.button {
-    -fx-background-radius: 8;
-    -fx-font-weight: 600;
-    font-weight: 600;
-    -fx-padding: 6 14;
-    padding: 6px 14px;
-}
-
-.button:hover { 
-    -fx-opacity: .9; 
-    opacity: .9;
-}
-
-.button:default { 
-    -fx-background-color: #e91e63; 
-    background-color: #e91e63;
-    -fx-text-fill: white; 
-    color: white;
-}
-
 .vbox.card-area {
     -fx-background-color: #f4f6f9;
     background-color: #f4f6f9;
     -fx-padding: 15;
     padding: 15px;
-}
-
-.table-view {
-    -fx-background-color: transparent;
-    background-color: transparent;
-    -fx-border-color: transparent;
-    border-color: transparent;
-}
-
-.table-view > .virtual-flow > .clipped-container > .sheet > .table-row-cell {
-    -fx-background-color: transparent;
-    background-color: transparent;
-}
-
-.table-row-cell .table-cell {
-    -fx-padding: 6 8;
-    padding: 6px 8px;
-}
-
-.table-row-cell.card {
-    -fx-background-color: white;
-    background-color: white;
-    -fx-background-radius: 8;
-    -fx-border-color: #e0e0e0;
-    border-color: #e0e0e0;
-    -fx-border-radius: 8;
-    border-radius: 8px;
-}
-
-.table-row-cell.card:filled:selected {
-    -fx-border-color: #3f51b5;
-    border-color: #3f51b5;
-    -fx-background-color: derive(#3f51b5, 90%);
-    background-color: #e8eaf6;
-}
-
-/* ─────── common controls ───── */
-.date-picker, .combo-box, .text-field .table-column-header {
-    -fx-background-color: #f4f6f9;
-    background-color: #f4f6f9;
-    -fx-border-width: 0 0 1 0;
-    border-width: 0 0 1px 0;
-    -fx-border-color: #e0e0e0;
-    border-color: #e0e0e0;
-    -fx-font-weight: bold;
-    font-weight: bold;
-}
-
-.table-cell { 
-    -fx-background-color: transparent;
-    background-color: transparent;
 }
 
 .label#lblSaldo {
@@ -101,66 +14,63 @@
     color: #3f51b5;
 }
 
-/* ─────── mini-card rows ───── */
-.table-view {
-    -fx-background-color: transparent;
-    -fx-border-color: transparent;
-}
-
-.table-view > .virtual-flow > .clipped-container > .sheet > .table-row-cell {
-    -fx-background-color: transparent;
-}
-
-.table-row-cell .table-cell {
-    -fx-padding: 6 8;
-}
-
-.table-row-cell.card {
-    -fx-background-color: white;
-    -fx-background-radius: 8;
-    -fx-border-color: BORDER;
-    border-color: BORDER;
-    -fx-border-radius: 8;
-    -fx-start-margin: 8;
-    -fx-end-margin: 8;
-}
-
-.table-row-cell.card:filled:selected {
-    -fx-border-color: PRIMARY;
-    -fx-background-color: derive(PRIMARY, 90%);
-}
-
-.table-view:focused .table-row-cell:focused {
-    -fx-focus-color: transparent;
-}
-
-/* header */
-.table-column-header {
-    -fx-background-color: BACK;
-    background-color: BACK;
-    -fx-border-width: 0 0 1 0;
-    -fx-border-color: BORDER;
-    -fx-font-weight: bold;
-}
-
-/* color text nelle celle (MainController imposta style) */
-.table-cell { -fx-background-color: transparent; }
-
-/* ────── pie chart & saldo ───── */
-.chart-pie { -fx-pie-label-visible: true; }
-
 .label#lblSaldo {
     -fx-font-size: 18;
+    font-size: 18px;
     -fx-font-weight: 700; 
     -fx-text-fill: PRIMARY;
 }
 
-.chart-container {
-    -fx-background-color: BACK;
-    background-color: BACK;
-    -fx-padding: 10;
-    padding: 10px;
-    border: 1px solid black;
-    -fx-border-radius: 8;
-    border-radius: 8px;
+/* ───── card dei grafici ───── */
+.card-box {
+    -fx-background-color: rgba(255,255,255,0.75);   /* bianco semitrasp. */
+    -fx-border-color: rgba(0,0,0,0.15);             /* grigio tenue      */
+    -fx-border-width: 1;
+    -fx-background-radius: 12;
+    -fx-border-radius: 12;
+    -fx-padding: 18 11 22 11;                       /* top/right/bot/left */
+    -fx-effect: dropshadow(one-pass-box, rgba(0,0,0,0.18), 12, 0, 0, 4);
+}
+
+.card-table {
+    -fx-background-color: rgba(255,255,255,0.75);   /* bianco semitrasp. */
+    -fx-border-color: rgba(0,0,0,0.15);             /* grigio tenue      */
+    -fx-border-width: 1;
+    -fx-background-radius: 12;
+    -fx-border-radius: 12;
+    -fx-padding: 10;                       /* top/right/bot/left */
+    -fx-effect: dropshadow(one-pass-box, rgba(0,0,0,0.18), 12, 0, 0, 4);
+}
+
+/* testo “Entrate / Uscite” già bold ma lo centriamo */
+.card-box > Label:first-child {
+    -fx-padding: 0 0 10 0;      /* spazio sotto il titolo */
+    -fx-font-size: 30px;
+    -fx-font-weight: 700;
+    -fx-alignment: center;
+}
+
+.footer {
+    -fx-padding: 12;
+}
+
+/* ---------- toolbar coloured buttons ---------- */
+.tb-btn.add-btn      { -fx-background-color: #2196f3; -fx-text-fill: white; }
+.tb-btn.add-btn:hover{ -fx-background-color: #1e88e5; }
+
+.tb-btn.edit-btn     { -fx-background-color: #ffc107; -fx-text-fill: #222; }
+.tb-btn.edit-btn:hover{ -fx-background-color: #ffb300; }
+
+.tb-btn.del-btn      { -fx-background-color: #e53935; -fx-text-fill: white; }
+.tb-btn.del-btn:hover{ -fx-background-color: #d32f2f; }
+
+.tb-btn.export-btn   { -fx-background-color: #4caf50; -fx-text-fill: white; }
+.tb-btn.export-btn:hover{ -fx-background-color: #43a047; }
+
+/* facoltativo: bordo sottile + angoli arrotondati per tutti i tb-btn */
+.tb-btn {
+    -fx-background-radius: 6;
+    -fx-border-radius: 6;
+    -fx-border-color: rgba(0,0,0,0.08);
+    -fx-border-width: 0.5;
 }
