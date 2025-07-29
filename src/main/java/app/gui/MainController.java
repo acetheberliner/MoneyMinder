@@ -146,19 +146,36 @@ public final class MainController {
     }
 
     /* ──────── filtri ──────── */
+    // @FXML private void applyFilters() {
+    //     String kw  = Optional.ofNullable(txtSearch.getText()).orElse("").toLowerCase();
+    //     String cat = cbFilterCat.getValue();
+    //     TxType ty  = cbFilterType.getValue();
+    //     YearMonth selectedMonth = YearMonth.from(monthPicker.getValue());
+
+    //     filtered.setPredicate(tr ->
+    //             (kw.isBlank() || tr.description().toLowerCase().contains(kw)) &&
+    //             (cat == null  || tr.category().name().equals(cat))            &&
+    //             (ty  == null  || tr.type()==ty)                               &&
+    //             YearMonth.from(tr.date()).equals(selectedMonth));
+
+    //     refreshCharts(selectedMonth);
+    // }
     @FXML private void applyFilters() {
-        String kw  = Optional.ofNullable(txtSearch.getText()).orElse("").toLowerCase();
-        String cat = cbFilterCat.getValue();
-        TxType ty  = cbFilterType.getValue();
-        YearMonth selectedMonth = YearMonth.from(monthPicker.getValue());
+        String kw = Optional.ofNullable(txtSearch.getText())
+                            .orElse("")
+                            .toLowerCase()
+                            .trim();
+
+        String catSel = cbFilterCat.getValue();   /* può essere "" */
+        TxType  tSel  = cbFilterType.getValue();
 
         filtered.setPredicate(tr ->
-                (kw.isBlank() || tr.description().toLowerCase().contains(kw)) &&
-                (cat == null  || tr.category().name().equals(cat))            &&
-                (ty  == null  || tr.type()==ty)                               &&
-                YearMonth.from(tr.date()).equals(selectedMonth));
+            (kw.isBlank() || tr.description().toLowerCase().contains(kw)) &&
+            (catSel == null || catSel.isBlank() || tr.category().name().equals(catSel)) &&
+            (tSel  == null || tr.type() == tSel)
+        );
 
-        refreshCharts(selectedMonth);
+        refreshCharts(currentMonth());
     }
 
     /* ──────── report ──────── */
@@ -229,7 +246,7 @@ public final class MainController {
 
         // default: data crescente
         colDate.setSortType(TableColumn.SortType.ASCENDING);
-        table.getSortOrder().setAll(colDate);
+        table.getSortOrder().setAll(Collections.singletonList(colDate));
 
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
         table.setRowFactory(tv -> {
@@ -270,11 +287,22 @@ public final class MainController {
     }
 
     /* ──────── filtri iniziali ──────── */
+    // private void setupFilters() {
+    //     cbFilterCat.getItems().add(null);                 // “tutte”
+    //     cbFilterCat.setItems(FXCollections.observableArrayList(allCategoryNames()));
+    //     cbFilterType.getItems().add(null);
+    //     cbFilterType.getItems().addAll(TxType.values());
+    // }
     private void setupFilters() {
-        cbFilterCat.getItems().add(null);                 // “tutte”
-        cbFilterCat.setItems(FXCollections.observableArrayList(allCategoryNames()));
-        cbFilterType.getItems().add(null);
+        /* (1)  voce “(tutte)” – usiamo stringa vuota, il prompt la mostra */
+        cbFilterCat.getItems().setAll("");                   // reset
+        cbFilterCat.getItems().addAll(allCategoryNames());   // enum + custom
+        cbFilterCat.setPromptText("Categoria");
+
+        /* (2)  TxType */
+        cbFilterType.getItems().setAll((TxType) null);       // reset
         cbFilterType.getItems().addAll(TxType.values());
+        cbFilterType.setPromptText("Tipo");
     }
 
     /* ──────── utilità ──────── */

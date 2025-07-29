@@ -1,11 +1,11 @@
 # MoneyMinder – Piano di lavoro
 
 # fix
-- search not filtering
+- search not filtering [DONE]
 - custom category show in history
 - salary selection turns off "expense" choice
 - legend colors [DONE]
-- cerca
+- cerca [DONE]
 
 # Work in progress
 - Possibilità di creare nuove categorie personalizzate:

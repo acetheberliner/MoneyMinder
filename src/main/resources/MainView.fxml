@@ -39,7 +39,7 @@
                         
             <Separator orientation="VERTICAL"/>
             
-            <TextField fx:id="txtSearch" promptText="Cerca..."/>
+            <TextField fx:id="txtSearch" promptText="Cerca..." onKeyReleased="#applyFilters" prefWidth="160"/>
 
             <Separator orientation="VERTICAL"/>
             

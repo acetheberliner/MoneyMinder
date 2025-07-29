@@ -59,7 +59,7 @@ public final class TrendDialog {
     /* ----------------- helper ----------------- */
     private static void refresh(LineChart<String, Number> chart, List<Transaction> txs, Gran g) {
         XYChart.Series<String, Number> s = buildSeries(txs, g);
-        chart.setData(FXCollections.observableArrayList(s));
+        chart.setData(FXCollections.observableList(Collections.singletonList(s)));
         chart.setTitle("Andamento saldo - " + g.name());
 
         // stile linea + marker azzurro
