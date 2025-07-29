@@ -94,8 +94,8 @@ public final class TrendDialog {
     private static XYChart.Series<String, Number> buildSeries(List<Transaction> txs, Gran g) {
         Map<String, Money> map = switch (g) {
             case Giornaliero -> group(txs, t -> t.date().toString());
-            case Mensile   -> group(txs, t -> YearMonth.from(t.date()).toString());
-            case Annuale   -> group(txs, t -> Year.from(t.date()).toString());
+            case Mensile -> group(txs, t -> YearMonth.from(t.date()).toString());
+            case Annuale -> group(txs, t -> Year.from(t.date()).toString());
         };
 
         Money running = Money.ZERO;

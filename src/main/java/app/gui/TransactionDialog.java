@@ -17,37 +17,35 @@ import java.util.regex.Pattern;
 
 public final class TransactionDialog {
 
-    /* accetta 123  – 123,45 – 123.45 */
+    // accetta importi con punto, virgola o senza decimali
     private static final Pattern AMOUNT_OK = Pattern.compile("\\d+(?:[,.]\\d{1,2})?");
 
-    /** se {@code original==null} ⇒ “Nuova”, altrimenti “Modifica” */
+    // nuova transazione o modifica esistente
     public static Optional<Transaction> show(Transaction original) {
-
         Dialog<Transaction> dlg = new Dialog<>();
+
         dlg.setTitle(original == null ? "Nuova transazione" : "Modifica transazione");
-        dlg.getDialogPane()
-           .getButtonTypes()
-           .addAll(ButtonType.OK, ButtonType.CANCEL);
+        dlg.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
 
-        /* ---------- campi ---------- */
-        DatePicker dpDate = new DatePicker(
-                original == null ? LocalDate.now() : original.date());
-
+        /* ---------- campi della dialog ---------- */
+        // data
+        DatePicker dpDate = new DatePicker(original == null ? LocalDate.now() : original.date());
+        
+        // tipoliga
         ComboBox<TxType> cbType = new ComboBox<>();
         cbType.getItems().addAll(TxType.values());
-        cbType.getSelectionModel().select(
-                original == null ? null : original.type());
+        cbType.getSelectionModel().select(original == null ? null : original.type());
 
-        /* ----- categoria (enum + custom) ----- */
+        // categoria
         ComboBox<String> cbCat = new ComboBox<>();
-        cbCat.setItems(FXCollections.observableArrayList(
-                MainController.allCategoryNames()));
-        if (original != null)
-            cbCat.getSelectionModel().select(original.categoryName());
+        cbCat.setItems(FXCollections.observableArrayList(MainController.allCategoryNames()));
+        if (original != null) cbCat.getSelectionModel().select(original.categoryName());
 
+        // button per custom category
         Button btnAddCat = new Button("+");
         btnAddCat.setOnAction(e -> {
             TextInputDialog td = new TextInputDialog();
+
             td.setTitle("Nuova categoria");
             td.setHeaderText(null);
             td.setContentText("Nome categoria:");
@@ -63,24 +61,23 @@ public final class TransactionDialog {
             });
         });
 
-        /* ----- importo & descrizione ----- */
-        String initAmt = original == null ? ""
-                       : original.amount().value().toPlainString()
-                                         .replace('.', ',');
+        // importo
+        String initAmt = original == null ? "" : original.amount().value().toPlainString().replace('.', ',');
         TextField tfAmount = new TextField(initAmt);
         tfAmount.setPromptText("es. 12,50");
 
-        TextField tfDesc = new TextField(
-                original == null ? "" : original.description());
+        // descrizione
+        TextField tfDesc = new TextField(original == null ? "" : original.description());
         tfDesc.setPromptText("Descrizione");
 
-        /* ----- valuta ----- */
+        // valuta
         ComboBox<String> cbCur = new ComboBox<>();
-        cbCur.getItems().addAll("EUR", "USD", "GBP", "CHF");
+        cbCur.getItems().addAll("EUR", "USD", "GBP", "CHF, JPY, CNY");
         cbCur.getSelectionModel().select("EUR");
 
-        /* ---------- layout ---------- */
+        // layout
         GridPane gp = new GridPane();
+        
         gp.setHgap(8);
         gp.setVgap(10);
         gp.setPadding(new Insets(15));
@@ -92,7 +89,7 @@ public final class TransactionDialog {
         gp.addRow(4, new Label("Valuta"),      cbCur);
         gp.addRow(5, new Label("Descrizione"), tfDesc);
 
-        /* anteprima in Euro */
+        // anteprima importo convertito
         Label lblPreview = new Label();
         gp.add(lblPreview, 1, 6);
 
@@ -104,44 +101,43 @@ public final class TransactionDialog {
                 lblPreview.setText("≈ " + Money.of(eur));
             } else lblPreview.setText("");
         };
+
         tfAmount.textProperty().addListener((o,ov,nv)->refreshPreview.run());
         cbCur.valueProperty().addListener((o,ov,nv)->refreshPreview.run());
+        
         refreshPreview.run();
 
         dlg.getDialogPane().setContent(gp);
 
-        /* ---------- validazione ---------- */
+        // validazione dei campi
         Node ok = dlg.getDialogPane().lookupButton(ButtonType.OK);
         Runnable validate = () ->
-                ok.setDisable(!AMOUNT_OK.matcher(tfAmount.getText().strip()).matches()
-                               || cbType.getValue() == null
-                               || cbCat.getValue() == null);
+            ok.setDisable(!AMOUNT_OK.matcher(tfAmount.getText().strip()).matches() || cbType.getValue() == null || cbCat.getValue() == null);
         validate.run();
+        
         tfAmount.textProperty().addListener((o,ov,nv)->validate.run());
         cbType.valueProperty().addListener((o,ov,nv)->validate.run());
         cbCat.valueProperty().addListener((o,ov,nv)->validate.run());
 
-        /* ---------- result ---------- */
+        // converto il testo in un oggetto Transaction
         dlg.setResultConverter(bt -> {
             if (bt != ButtonType.OK) return null;
 
             String raw = tfAmount.getText().strip().replace(',', '.');
-            BigDecimal eur = CurrencyConverter.toEur(
-                    new BigDecimal(raw), cbCur.getValue());
+            BigDecimal eur = CurrencyConverter.toEur(new BigDecimal(raw), cbCur.getValue());
 
             return new Transaction(
-                    dpDate.getValue(),
-                    tfDesc.getText().strip(),
-                    cbCat.getValue(),          // salva ESATTAMENTE il testo scelto
-                    Money.of(eur),
-                    cbType.getValue()
+                dpDate.getValue(),
+                tfDesc.getText().strip(),
+                cbCat.getValue(),
+                Money.of(eur),
+                cbType.getValue()
             );
         });
-
         return dlg.showAndWait();
     }
 
-    /** overload comodo per “Aggiungi” */
+    // overload per nuova transazione
     public static Optional<Transaction> show() { return show(null); }
 
     private TransactionDialog() {}
