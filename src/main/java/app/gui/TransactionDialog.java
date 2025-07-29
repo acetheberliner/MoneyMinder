@@ -16,42 +16,45 @@ import java.util.Optional;
 import java.util.regex.Pattern;
 
 public final class TransactionDialog {
-    /* ───────── costanti ───────── */
+
+    /* accetta 123  – 123,45 – 123.45 */
     private static final Pattern AMOUNT_OK = Pattern.compile("\\d+(?:[,.]\\d{1,2})?");
 
-    /* ───────── factory principale ───────── */
+    /** se {@code original==null} ⇒ “Nuova”, altrimenti “Modifica” */
     public static Optional<Transaction> show(Transaction original) {
+
         Dialog<Transaction> dlg = new Dialog<>();
-
         dlg.setTitle(original == null ? "Nuova transazione" : "Modifica transazione");
-        dlg.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+        dlg.getDialogPane()
+           .getButtonTypes()
+           .addAll(ButtonType.OK, ButtonType.CANCEL);
 
-        /* ---------- campi base ---------- */
-        DatePicker dpDate = new DatePicker(original == null ? LocalDate.now() : original.date());
+        /* ---------- campi ---------- */
+        DatePicker dpDate = new DatePicker(
+                original == null ? LocalDate.now() : original.date());
 
         ComboBox<TxType> cbType = new ComboBox<>();
         cbType.getItems().addAll(TxType.values());
-        cbType.getSelectionModel().select(original == null ? null : original.type());
+        cbType.getSelectionModel().select(
+                original == null ? null : original.type());
 
-        /* ---------- categorie ---------- */
+        /* ----- categoria (enum + custom) ----- */
         ComboBox<String> cbCat = new ComboBox<>();
-        
-        // enum + eventuali custom già inserite
-        cbCat.setItems(FXCollections.observableArrayList(MainController.allCategoryNames()));
+        cbCat.setItems(FXCollections.observableArrayList(
+                MainController.allCategoryNames()));
+        if (original != null)
+            cbCat.getSelectionModel().select(original.categoryName());
 
-        if (original != null) cbCat.getSelectionModel().select(original.category().name());
-
-        // tasto “+ Categoria” affiancato
         Button btnAddCat = new Button("+");
-        btnAddCat.setOnAction(ev -> {
-            TextInputDialog tid = new TextInputDialog();
-
-            tid.setTitle("Nuova categoria");
-            tid.setHeaderText(null);
-            tid.setContentText("Nome categoria:");
-            tid.showAndWait().ifPresent(name -> {
+        btnAddCat.setOnAction(e -> {
+            TextInputDialog td = new TextInputDialog();
+            td.setTitle("Nuova categoria");
+            td.setHeaderText(null);
+            td.setContentText("Nome categoria:");
+            td.showAndWait().ifPresent(name -> {
                 name = name.strip();
                 if (name.isBlank()) return;
+
                 if (!MainController.CUSTOM_CATEGORIES.contains(name)) {
                     MainController.CUSTOM_CATEGORIES.add(name);
                     cbCat.getItems().add(name);
@@ -60,83 +63,86 @@ public final class TransactionDialog {
             });
         });
 
-        /* ---------- importo & descrizione ---------- */
-        String initAmt = original == null ? "" : original.amount().value().toPlainString().replace('.', ',');
+        /* ----- importo & descrizione ----- */
+        String initAmt = original == null ? ""
+                       : original.amount().value().toPlainString()
+                                         .replace('.', ',');
         TextField tfAmount = new TextField(initAmt);
         tfAmount.setPromptText("es. 12,50");
 
-        TextField tfDesc = new TextField(original == null ? "" : original.description());
-        tfDesc.setPromptText("es. Bolletta Luglio 2025");
+        TextField tfDesc = new TextField(
+                original == null ? "" : original.description());
+        tfDesc.setPromptText("Descrizione");
 
-        /* ---------- valuta ---------- */
+        /* ----- valuta ----- */
         ComboBox<String> cbCur = new ComboBox<>();
         cbCur.getItems().addAll("EUR", "USD", "GBP", "CHF");
         cbCur.getSelectionModel().select("EUR");
 
         /* ---------- layout ---------- */
         GridPane gp = new GridPane();
-        gp.setHgap(8); gp.setVgap(10); gp.setPadding(new Insets(15));
+        gp.setHgap(8);
+        gp.setVgap(10);
+        gp.setPadding(new Insets(15));
 
-        gp.addRow(0, new Label("Data"), dpDate);
-        gp.addRow(1, new Label("Tipo"), cbType);
-        gp.addRow(2, new Label("Categoria"), new HBox(5, cbCat, btnAddCat));
-        gp.addRow(3, new Label("Importo"), tfAmount);
-        gp.addRow(4, new Label("Valuta"), cbCur); 
-        gp.addRow(6, new Label("Descrizione"), tfDesc);
+        gp.addRow(0, new Label("Data"),        dpDate);
+        gp.addRow(1, new Label("Tipologia"),        cbType);
+        gp.addRow(2, new Label("Categoria"),   new HBox(5, cbCat, btnAddCat));
+        gp.addRow(3, new Label("Importo"),     tfAmount);
+        gp.addRow(4, new Label("Valuta"),      cbCur);
+        gp.addRow(5, new Label("Descrizione"), tfDesc);
 
-        /* --------- anteprima € --------- */
+        /* anteprima in Euro */
         Label lblPreview = new Label();
-        gp.add(lblPreview, 1, 5);
+        gp.add(lblPreview, 1, 6);
 
         Runnable refreshPreview = () -> {
             String txt = tfAmount.getText().strip().replace(',', '.');
             if (txt.matches("\\d+(?:[.]\\d{1,2})?")) {
-                BigDecimal val = new BigDecimal(txt);
+                BigDecimal val  = new BigDecimal(txt);
                 BigDecimal eur = CurrencyConverter.toEur(val, cbCur.getValue());
                 lblPreview.setText("≈ " + Money.of(eur));
-            } else {
-                lblPreview.setText("");
-            }
+            } else lblPreview.setText("");
         };
-        tfAmount.textProperty().addListener((o, oldV, newV) -> refreshPreview.run());
-        cbCur.valueProperty().addListener((o, oldV, newV) -> refreshPreview.run());
+        tfAmount.textProperty().addListener((o,ov,nv)->refreshPreview.run());
+        cbCur.valueProperty().addListener((o,ov,nv)->refreshPreview.run());
         refreshPreview.run();
 
         dlg.getDialogPane().setContent(gp);
 
         /* ---------- validazione ---------- */
-        Node okBtn = dlg.getDialogPane().lookupButton(ButtonType.OK);
-
-        Runnable valid = () -> okBtn.setDisable(!AMOUNT_OK.matcher(tfAmount.getText().strip()).matches());
-        valid.run();
-        tfAmount.textProperty().addListener((o,oldVal,n)->valid.run());
+        Node ok = dlg.getDialogPane().lookupButton(ButtonType.OK);
+        Runnable validate = () ->
+                ok.setDisable(!AMOUNT_OK.matcher(tfAmount.getText().strip()).matches()
+                               || cbType.getValue() == null
+                               || cbCat.getValue() == null);
+        validate.run();
+        tfAmount.textProperty().addListener((o,ov,nv)->validate.run());
+        cbType.valueProperty().addListener((o,ov,nv)->validate.run());
+        cbCat.valueProperty().addListener((o,ov,nv)->validate.run());
 
         /* ---------- result ---------- */
         dlg.setResultConverter(bt -> {
             if (bt != ButtonType.OK) return null;
 
             String raw = tfAmount.getText().strip().replace(',', '.');
-
-            BigDecimal value = new BigDecimal(raw);
-            BigDecimal inEuro = CurrencyConverter.toEur(value, cbCur.getValue());
-
-            String catName = cbCat.getValue();
-            Category cat;
-
-            try { cat = Category.valueOf(catName); }
-            catch (IllegalArgumentException e) { cat = Category.ALTRO; }
+            BigDecimal eur = CurrencyConverter.toEur(
+                    new BigDecimal(raw), cbCur.getValue());
 
             return new Transaction(
-                dpDate.getValue(),
-                tfDesc.getText().strip(),
-                cat,
-                Money.of(inEuro),
-                cbType.getValue()
+                    dpDate.getValue(),
+                    tfDesc.getText().strip(),
+                    cbCat.getValue(),          // salva ESATTAMENTE il testo scelto
+                    Money.of(eur),
+                    cbType.getValue()
             );
         });
+
         return dlg.showAndWait();
     }
 
+    /** overload comodo per “Aggiungi” */
     public static Optional<Transaction> show() { return show(null); }
+
     private TransactionDialog() {}
 }

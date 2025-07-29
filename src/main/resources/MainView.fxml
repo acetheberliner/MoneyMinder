@@ -34,20 +34,20 @@
 
             <Separator orientation="VERTICAL"/>
 
-            <Label text="Data:"/>
-            <DatePicker fx:id="monthPicker"/>
-                        
+            <Label text="Mese:"/>
+            <DatePicker fx:id="monthPicker" onAction="#onMonthConfirm" promptText="YYYY-MM"/>
+
             <Separator orientation="VERTICAL"/>
-            
+
             <TextField fx:id="txtSearch" promptText="Cerca..." onKeyReleased="#applyFilters" prefWidth="160"/>
 
             <Separator orientation="VERTICAL"/>
-            
+
             <ComboBox fx:id="cbFilterCat" promptText="Categoria" onAction="#applyFilters"/>
             <ComboBox fx:id="cbFilterType" promptText="Tipo" onAction="#applyFilters"/>
-            
+
             <Separator orientation="VERTICAL"/>
-            
+
             <Button text="Esporta"  onAction="#onExportXlsx" styleClass="tb-btn export-btn"/>
         </ToolBar>
     </top>

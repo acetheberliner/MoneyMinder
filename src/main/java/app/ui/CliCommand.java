@@ -4,7 +4,6 @@ package app.ui;
 import app.dao.JsonTransactionDao;
 import app.model.*;
 import app.service.TransactionService;
-
 import picocli.CommandLine.*;
 import picocli.CommandLine.Model.CommandSpec;
 
@@ -15,22 +14,23 @@ import java.util.List;
 import java.util.concurrent.Callable;
 
 @Command(
-    name = "money",
-    mixinStandardHelpOptions = true,
-    version = "MoneyMinder CLI 1.0",
-    description = "Gestione finanze personali da riga di comando",
-    subcommands = {
-        CliCommand.Add.class,
-        CliCommand.ListCmd.class,
-        CliCommand.Report.class
-    }
+        name = "money",
+        mixinStandardHelpOptions = true,
+        version = "MoneyMinder CLI 1.0",
+        description = "Gestione finanze personali da riga di comando",
+        subcommands = {CliCommand.Add.class,
+                       CliCommand.ListCmd.class,
+                       CliCommand.Report.class}
 )
 public final class CliCommand implements Callable<Integer> {
+
     @Spec CommandSpec spec;
 
+    /* servizio condiviso dai sub-command */
     static final TransactionService SERVICE = new TransactionService(
-        new JsonTransactionDao(new File(System.getProperty("user.home"), ".money-minder.json"))
-    );
+            new JsonTransactionDao(
+                    new File(System.getProperty("user.home"),
+                             ".money-minder.json")));
 
     @Override public Integer call() {
         spec.commandLine().usage(System.out);
@@ -40,16 +40,21 @@ public final class CliCommand implements Callable<Integer> {
     /* ───────── add ───────── */
     @Command(name = "add", description = "Aggiunge una transazione")
     static class Add implements Callable<Integer> {
-        @Option(names = "-d", required = true, description = "Data (yyyy-MM-dd)")
+
+        @Option(names = "-d", required = true,
+                description = "Data (yyyy-MM-dd)")
         LocalDate date;
 
-        @Option(names = "-t", required = true, description = "Tipo: ENTRATA | USCITA")
+        @Option(names = "-t", required = true,
+                description = "Tipo: ENTRATA | USCITA")
         TxType type;
 
-        @Option(names = "-c", required = true, description = "Categoria")
-        Category category;
+        @Option(names = "-c", required = true,
+                description = "Categoria (enum o custom)")
+        String category;                       // <─ ora String
 
-        @Option(names = "-a", required = true, description = "Importo (es. 12.50)")
+        @Option(names = "-a", required = true,
+                description = "Importo (es. 12.50)")
         String amount;
 
         @Parameters(index = "0..*", description = "Descrizione")
@@ -57,14 +62,12 @@ public final class CliCommand implements Callable<Integer> {
 
         @Override public Integer call() {
             SERVICE.add(new Transaction(
-                date,
-                String.join(" ", descr),
-                category,
-                Money.of(amount.replace(',', '.')),
-                type)
-            );
+                    date,
+                    String.join(" ", descr).strip(),
+                    category.strip(),                   // passa il nome
+                    Money.of(amount.replace(',', '.')),
+                    type));
             System.out.println("✅ Transazione salvata.");
-
             return 0;
         }
     }
@@ -78,22 +81,29 @@ public final class CliCommand implements Callable<Integer> {
         }
     }
 
-    /* --------------------- report -------------------- */
-    @Command(name = "report", description = "Report mensile (formato yyyy-MM, default mese corrente)")
+    /* ───────── report ───────── */
+    @Command(name = "report",
+             description = "Report mensile (yyyy-MM, default mese corrente)")
     static class Report implements Callable<Integer> {
-        @Parameters(index = "0", arity = "0..1", description = "Mese da analizzare (yyyy-MM)", defaultValue = "")
+
+        @Parameters(index = "0", arity = "0..1",
+                    description = "Mese da analizzare (yyyy-MM)",
+                    defaultValue = "")
         String month;
 
         @Override public Integer call() {
-            YearMonth ym = month.isBlank() ? YearMonth.now() : YearMonth.parse(month);
+            YearMonth ym = month.isBlank() ? YearMonth.now()
+                                           : YearMonth.parse(month);
 
             var rep = SERVICE.monthlyReport(ym);
 
             System.out.printf("%n=== Report %s ===%n", ym);
-            System.out.printf(" Entrate : %s%n Uscite  : %s%n Saldo   : %s%n", rep.totaleEntrate(), rep.totaleUscite(), rep.saldo());
-            System.out.println(" Uscite per categoria:");
+            System.out.printf(" Entrate : %s%n Uscite  : %s%n Saldo   : %s%n",
+                    rep.totaleEntrate(), rep.totaleUscite(), rep.saldo());
 
-            rep.perCategoria().forEach((k, v) -> System.out.printf("   %-15s %s%n", k, v));
+            System.out.println(" Uscite per categoria:");
+            rep.perCategoria()
+               .forEach((k,v)->System.out.printf("   %-15s %s%n", k, v));
 
             return 0;
         }

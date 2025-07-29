@@ -70,7 +70,7 @@ public final class TransactionService {
             .reduce(Money.ZERO, Money::add);
 
         Map<String, Money> byCat = txs.stream().collect(Collectors.groupingBy(
-            t -> t.category().name(),
+            t -> t.categoryName(),
             TreeMap::new,
             Collectors.reducing(Money.ZERO, Transaction::amount, Money::add)
         ));

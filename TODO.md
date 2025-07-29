@@ -2,7 +2,7 @@
 
 # fix
 - search not filtering [DONE]
-- custom category show in history
+- custom category show in history [DONE]
 - salary selection turns off "expense" choice
 - legend colors [DONE]
 - cerca [DONE]
@@ -23,7 +23,5 @@
 - Diagramma andamento del saldo nel tempo --------------------- [DONE]
 
 - Possibilità di registrare spese in valute diverse con conversione automatica  --------------------- [DONE]
-
-- Riepilogo di entrate, uscite e saldo per l’intero anno con confronto ANCHE GRAFICO fra mesi
 
 - Miglioramenti significativi alla interfaccia grafica con UI moderna  --------------------- [DONE]

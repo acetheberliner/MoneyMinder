@@ -1,4 +1,4 @@
-/* ───── app/gui/MainController.java ───── */
+/* ───────── app/gui/MainController.java ───────── */
 package app.gui;
 
 import app.dao.JsonTransactionDao;
@@ -27,292 +27,361 @@ import java.util.stream.Collectors;
 
 public final class MainController {
 
-    /* ──────── FXML ──────── */
-    @FXML private TableView<Transaction> table;
-    @FXML private TableColumn<Transaction,String> colDate,colType,colCat,colAmount,colDesc;
-    @FXML private DatePicker  monthPicker;
-    @FXML private TextField   txtSearch;
-    @FXML private ComboBox<String> cbFilterCat;
-    @FXML private ComboBox<TxType> cbFilterType;
-    @FXML private PieChart   pieIncome, pieExpense;
-    @FXML private Label      lblTotIncome, lblTotExpense, lblSaldo;
-    @FXML private Button     btnEdit, btnTrend;
+    /* ─────────── FXML ─────────── */
+    @FXML private TableView<Transaction>            table;
+    @FXML private TableColumn<Transaction,String>   colDate,colType,colCat,colAmount,colDesc;
+    @FXML private DatePicker                        monthPicker;
+    @FXML private TextField                         txtSearch;
+    @FXML private ComboBox<String>                  cbFilterCat;
+    @FXML private ComboBox<TxType>                  cbFilterType;
+    @FXML private PieChart                          pieIncome,pieExpense;
+    @FXML private Label                             lblTotIncome,lblTotExpense,lblSaldo;
+    @FXML private Button                            btnEdit,btnTrend;
 
-    /* ──────── colori pre-definiti ──────── */
-    private static final Map<Category,String> CAT_COLOR = Map.of(
-            Category.STIPENDIO,       "#13e2c0",
-            Category.AFFITTO,         "#2196f3",
-            Category.ALIMENTI,        "#ffc107",
-            Category.UTILITA,         "#9c27b0",
-            Category.INTRATTENIMENTO, "#f79400",
-            Category.CARBURANTE,      "#795548",
-            Category.ALTRO,           "#607d8b"
-    );
-
-    /* ───── categorie custom (in RAM) ───── */
+    /* ───── categorie custom (solo RAM) ───── */
     public static final ObservableList<String> CUSTOM_CATEGORIES = FXCollections.observableArrayList();
     public static List<String> allCategoryNames() {
-        var l = Arrays.stream(Category.values()).map(Category::name).collect(Collectors.toCollection(ArrayList::new));
+        var l = Arrays.stream(Category.values())
+                      .map(Category::name)
+                      .collect(Collectors.toCollection(ArrayList::new));
         l.addAll(CUSTOM_CATEGORIES);
         return l;
     }
 
-    /* ──────── servizi / stato ──────── */
+    /* ───── servizi & stato ───── */
     private final TransactionService service = new TransactionService(
-            new JsonTransactionDao(new File(System.getProperty("user.home"), ".money-minder.json")));
-    private final BudgetService budgetSrv   = new BudgetService();
+            new JsonTransactionDao(new File(System.getProperty("user.home"),
+                                            ".money-minder.json")));
+    private final BudgetService budgetSrv = new BudgetService();
 
     private final ObservableList<Transaction> master   = FXCollections.observableArrayList();
     private final FilteredList<Transaction>   filtered = new FilteredList<>(master, t -> true);
     private final SortedList<Transaction>     sorted   = new SortedList<>(filtered);
 
+    private final Map<String,String> dynColor = new HashMap<>();   /* colori per categorie custom */
     private final Map<String,String> incomeColorCache = new HashMap<>();
 
-    /* ──────── init ──────── */
+    /* ───────── init ───────── */
     @FXML private void initialize() {
         bindColumns();
         styleCells();
+
+        // 1) carica tutte le transazioni da disco
+        master.setAll(service.list());
+
+        /* 2) estrae dal DB eventuali categorie non-enum
+            e le aggiunge alla lista osservabile CUSTOM_CATEGORIES        */
+        refreshCustomCatsFrom(master);
+
+        // 3) ora che la lista è completa prepariamo table e filtri
         setupTable();
         setupFilters();
 
-        master.setAll(service.list());
+        var fmt = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM");
 
+        // monthPicker.setValue(LocalDate.now().withDayOfMonth(1));
+        // monthPicker.valueProperty().addListener((o,ov,nv)->applyFilters());
+
+        // string-converter  LocalDate  <->  “yyyy-MM”
+        monthPicker.setConverter(new javafx.util.StringConverter<>() {
+            @Override public String toString(LocalDate d){
+                return d == null ? "" : d.format(fmt);
+            }
+            @Override public LocalDate fromString(String s){
+                if (s == null || s.isBlank()) return null;
+                return YearMonth.parse(s, fmt).atDay(1);
+            }
+        });
+
+        // impedisce la selezione di giorni diversi dal 1
+        monthPicker.setDayCellFactory(dp -> new DateCell(){
+            @Override public void updateItem(LocalDate d, boolean empty){
+                super.updateItem(d, empty);
+                if (!empty && d.getDayOfMonth() != 1)  // disabilita tutti tranne il giorno 1
+                    setDisable(true);
+            }
+        });
+
+        // default: mese corrente
         monthPicker.setValue(LocalDate.now().withDayOfMonth(1));
-        monthPicker.valueProperty().addListener((o, ov, nv) -> applyFilters()); // ← reagisce al cambio mese
 
-        master.addListener((ListChangeListener<Transaction>) c -> refreshCharts(currentMonth()));
+        master.addListener((ListChangeListener<Transaction>) c -> {
+            /* se compaiono nuove transazioni con categorie custom
+            le aggiungiamo immediatamente ai filtri                   */
+            while (c.next() && c.wasAdded())
+                refreshCustomCatsFrom(c.getAddedSubList());
+            refreshCharts(currentMonth());
+        });
 
-        applyFilters();   // primissimo caricamento
+        applyFilters();          // primo render
     }
 
-    /* ──────── toolbar ──────── */
+
+    /* ╔═══════ Toolbar actions ═══════╗ */
     @FXML private void onAdd() {
         TransactionDialog.show().ifPresent(tx -> {
-            master.add(tx);    // aggiorna tabella
-            service.add(tx);   // persiste
-            checkBudget(tx);
+            master.add(tx);      service.add(tx);      checkBudget(tx);
         });
     }
     @FXML private void onEdit() {
-        Transaction orig = table.getSelectionModel().getSelectedItem();
-        if (orig == null) return;
+        Transaction sel = table.getSelectionModel().getSelectedItem();
+        if (sel == null) return;
 
-        TransactionDialog.show(orig).ifPresent(ed -> {
-            master.set(master.indexOf(orig), ed);
-            service.replace(orig, ed);
+        TransactionDialog.show(sel).ifPresent(ed -> {
+            master.set(master.indexOf(sel), ed);
+            service.replace(sel, ed);
             checkBudget(ed);
         });
     }
     @FXML private void onRemove() {
         Transaction sel = table.getSelectionModel().getSelectedItem();
         if (sel != null && confirm("Rimuovere la transazione?")) {
-            master.remove(sel);
-            service.replaceAll(master);
+           master.remove(sel);  service.replaceAll(master);
         }
     }
-
-    @FXML private void onUpdate() {
-        applyFilters();
+    @FXML private void onUpdate() { applyFilters(); }
+    @FXML private void onMonthConfirm() { refreshCharts(currentMonth()); }
+    @FXML private void onTrend() {
+        TrendDialog.show((Stage) table.getScene().getWindow(), master);
+    }
+    @FXML private void onReport() {
+        YearMonth ym = currentMonth();
+        MonthlyReportDialog.show((Stage)table.getScene().getWindow(),
+                                 ym,
+                                 service.monthlyReport(ym));
+    }
+    @FXML private void onOptions() {
+        BudgetDialog.show((Stage)table.getScene().getWindow(),
+                          allCategoryNames(),
+                          budgetSrv);
     }
 
-    @FXML private void onMonthConfirm() {           // ← SENZA parametri
-        refreshCharts(currentMonth());
+    /* ╔═══════ Filtri ═══════╗ */
+    @FXML private void applyFilters() {
+        String kw   = Optional.ofNullable(txtSearch.getText()).orElse("").toLowerCase().trim();
+        String cat  = cbFilterCat.getValue();          /* "" = tutte */
+        TxType tSel = cbFilterType.getValue();
+        YearMonth ym = currentMonth();
+
+        filtered.setPredicate(tr ->
+            (kw.isBlank() || tr.description().toLowerCase().contains(kw)) &&
+            (cat == null || cat.isBlank() || tr.categoryName().equals(cat)) &&
+            (tSel == null || tr.type() == tSel) &&
+            YearMonth.from(tr.date()).equals(ym)
+        );
+        refreshCharts(ym);
     }
 
-    /* ──────── budget check ──────── */
+    /* ╔═══════ Budget check ═══════╗ */
     private void checkBudget(Transaction tx) {
         if (tx.type() != TxType.USCITA) return;
 
         YearMonth ym = YearMonth.from(tx.date());
-        Money spese = master.stream()
+        Money spent = master.stream()
                 .filter(t -> t.type()==TxType.USCITA
-                          && t.category()==tx.category()
+                          && t.categoryName().equals(tx.categoryName())
                           && YearMonth.from(t.date()).equals(ym))
                 .map(Transaction::amount)
                 .reduce(Money.ZERO, Money::add);
 
-        budgetSrv.get(tx.category().name()).ifPresent(limit -> {
-            if (spese.value().compareTo(limit.value()) > 0) {
+        budgetSrv.get(tx.categoryName()).ifPresent(limit -> {
+            if (spent.value().compareTo(limit.value()) > 0) {
                 new Alert(Alert.AlertType.WARNING,
-                        "Budget per "+tx.category().name()+" superato!\n"+
-                        "Limite: "+limit+"  Spese: "+spese).showAndWait();
+                        "Budget per "+tx.categoryName()+" superato!\n"+
+                        "Limite: "+limit+"   Spese: "+spent).showAndWait();
             }
         });
     }
 
-    /* ──────── trend chart ──────── */
-    @FXML private void onTrend() {
-        TrendDialog.show((Stage) table.getScene().getWindow(), master);
-    }
-
-    /* ──────── filtri ──────── */
-    // @FXML private void applyFilters() {
-    //     String kw  = Optional.ofNullable(txtSearch.getText()).orElse("").toLowerCase();
-    //     String cat = cbFilterCat.getValue();
-    //     TxType ty  = cbFilterType.getValue();
-    //     YearMonth selectedMonth = YearMonth.from(monthPicker.getValue());
-
-    //     filtered.setPredicate(tr ->
-    //             (kw.isBlank() || tr.description().toLowerCase().contains(kw)) &&
-    //             (cat == null  || tr.category().name().equals(cat))            &&
-    //             (ty  == null  || tr.type()==ty)                               &&
-    //             YearMonth.from(tr.date()).equals(selectedMonth));
-
-    //     refreshCharts(selectedMonth);
-    // }
-    @FXML private void applyFilters() {
-        String kw = Optional.ofNullable(txtSearch.getText())
-                            .orElse("")
-                            .toLowerCase()
-                            .trim();
-
-        String catSel = cbFilterCat.getValue();   /* può essere "" */
-        TxType  tSel  = cbFilterType.getValue();
-
-        filtered.setPredicate(tr ->
-            (kw.isBlank() || tr.description().toLowerCase().contains(kw)) &&
-            (catSel == null || catSel.isBlank() || tr.category().name().equals(catSel)) &&
-            (tSel  == null || tr.type() == tSel)
-        );
-
-        refreshCharts(currentMonth());
-    }
-
-    /* ──────── report ──────── */
-    @FXML private void onReport() {
-        YearMonth ym = currentMonth();
-        MonthlyReportDialog.show((Stage) table.getScene().getWindow(), ym, service.monthlyReport(ym));
-    }
-
-    /* ──────── opzioni budget ──────── */
-    @FXML private void onOptions() {
-        BudgetDialog.show((Stage) table.getScene().getWindow(), allCategoryNames(), budgetSrv);
-    }
-
-    /* ──────── grafici ──────── */
+    /* ╔═══════ Grafici ═══════╗ */
     private void refreshCharts(YearMonth ym) {
-        var month = master.stream().filter(t -> YearMonth.from(t.date()).equals(ym)).toList();
+        var month = master.stream()
+                          .filter(t -> YearMonth.from(t.date()).equals(ym))
+                          .toList();
 
-        Money totIn  = sum(month, TxType.ENTRATA);
-        Money totOut = sum(month, TxType.USCITA);
+        Money in  = sum(month, TxType.ENTRATA);
+        Money out = sum(month, TxType.USCITA);
 
-        lblTotIncome.setText("Entrate: "+totIn);
-        lblTotExpense.setText("Uscite: "+totOut);
-        lblSaldo.setText("Saldo: "+totIn.subtract(totOut));
+        lblTotIncome.setText("Entrate: "+in);
+        lblTotExpense.setText("Uscite: "+out);
+        lblSaldo.setText("Saldo: "+in.subtract(out));
 
         pieIncome.setData(buildIncomeData(month));
         pieExpense.setData(buildExpenseData(month));
-
         pieIncome.setLegendVisible(false);
         pieExpense.setLegendVisible(false);
     }
 
-    /* ──────── Excel export ──────── */
+    private void refreshCustomCatsFrom(List<? extends Transaction> src) {
+        src.stream()
+        .map(Transaction::categoryName)               // String
+        .filter(name -> {                             // scarta gli enum
+            try { Category.valueOf(name); return false; }
+            catch (Exception ex) { return true; }
+        })
+        .filter(name -> !CUSTOM_CATEGORIES.contains(name))
+        .forEach(CUSTOM_CATEGORIES::add);
+    }
+
+    /* ╔═══════ Export XLSX (identico) ═══════╗ */
     @FXML private void onExportXlsx() {
         FileChooser fc = new FileChooser();
         fc.setInitialFileName("MoneyMinder-"+currentMonth()+".xlsx");
-        fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("Excel (*.xlsx)", "*.xlsx"));
+        fc.getExtensionFilters().add(
+                new FileChooser.ExtensionFilter("Excel (*.xlsx)","*.xlsx"));
         File f = fc.showSaveDialog(table.getScene().getWindow());
         if (f == null) return;
 
         try (XSSFWorkbook wb = new XSSFWorkbook()) {
-            var sh   = wb.createSheet("Transazioni");
+            var sh = wb.createSheet("Transazioni");
             var bold = wb.createFont(); bold.setBold(true);
             var hdr  = wb.createCellStyle(); hdr.setFont(bold);
-            var money= wb.createCellStyle(); money.setDataFormat(wb.createDataFormat().getFormat("€#,##0.00"));
+            var money= wb.createCellStyle();
+            money.setDataFormat(wb.createDataFormat().getFormat("€#,##0.00"));
 
             String[] head = {"Data","Tipo","Categoria","Importo","Descrizione"};
             var r0 = sh.createRow(0);
-            for (int i=0;i<head.length;i++){ var c=r0.createCell(i); c.setCellValue(head[i]); c.setCellStyle(hdr); }
+            for (int i=0;i<head.length;i++){
+                var c=r0.createCell(i); c.setCellValue(head[i]); c.setCellStyle(hdr);
+            }
 
-            int r=1;
-            for (Transaction t: filtered){ // solo quelle visibili
+            int r = 1;
+            for (Transaction t : filtered){
                 var row = sh.createRow(r++);
                 row.createCell(0).setCellValue(t.date().toString());
                 row.createCell(1).setCellValue(t.type().toString());
-                row.createCell(2).setCellValue(t.category().name());
-                var cImp=row.createCell(3); cImp.setCellValue(t.amount().value().doubleValue()); cImp.setCellStyle(money);
+                row.createCell(2).setCellValue(t.categoryName());
+                var cImp=row.createCell(3);
+                cImp.setCellValue(t.amount().value().doubleValue());
+                cImp.setCellStyle(money);
                 row.createCell(4).setCellValue(t.description());
             }
             for(int i=0;i<head.length;i++) sh.autoSizeColumn(i);
-            try(var out=new FileOutputStream(f)){ wb.write(out); }
+            try(FileOutputStream out = new FileOutputStream(f)){ wb.write(out); }
         }catch(Exception ex){ alert("Errore export:\n"+ex.getMessage()); }
     }
 
-    /* ──────── configurazioni tabella ──────── */
-    private void setupTable() {
+    /* ╔═══════ Tabella ═══════╗ */
+    private void setupTable(){
         sorted.comparatorProperty().bind(table.comparatorProperty());
         table.setItems(sorted);
 
-        // default: data crescente
         colDate.setSortType(TableColumn.SortType.ASCENDING);
-        table.getSortOrder().setAll(Collections.singletonList(colDate));
+        table.getSortOrder().setAll(colDate);
 
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
         table.setRowFactory(tv -> {
-            var row = new TableRow<Transaction>() {
-                @Override protected void updateItem(Transaction t, boolean empty) {
+            TableRow<Transaction> row = new TableRow<>(){
+                @Override protected void updateItem(Transaction t, boolean empty){
                     super.updateItem(t, empty);
                     getStyleClass().remove("card");
-                    if (!empty) getStyleClass().add("card");
+                    if(!empty) getStyleClass().add("card");
                 }
             };
-            row.setOnMouseClicked(e -> { if (e.getClickCount()==2 && !row.isEmpty()) onEdit(); });
+            row.setOnMouseClicked(e -> {
+                if(e.getClickCount()==2 && !row.isEmpty()) onEdit();
+            });
             return row;
         });
-
         btnEdit.disableProperty().bind(table.getSelectionModel().selectedItemProperty().isNull());
     }
 
-    /* ──────── colonne & stile ──────── */
-    private void bindColumns() {
-        colDate  .setCellValueFactory(c -> new ReadOnlyStringWrapper(c.getValue().date().toString()));
-        colType  .setCellValueFactory(c -> new ReadOnlyStringWrapper(c.getValue().type().toString()));
-        colCat   .setCellValueFactory(c -> new ReadOnlyStringWrapper(c.getValue().category().name()));
-        colAmount.setCellValueFactory(c -> new ReadOnlyStringWrapper(c.getValue().amount().toString()));
-        colDesc  .setCellValueFactory(c -> new ReadOnlyStringWrapper(c.getValue().description()));
-    }
-    private void styleCells() {
-        colType.setCellFactory(tc -> colorCell(v -> v.equalsIgnoreCase("ENTRATA") ? "#4caf50" : "#e53935"));
-        colCat .setCellFactory(tc -> colorCell(v -> CAT_COLOR.getOrDefault(Category.valueOf(v), "#aaaaaa")));
-    }
-    private TableCell<Transaction,String> colorCell(Function<String,String> fn){
-        return new TableCell<>() {
-            @Override protected void updateItem(String v, boolean empty) {
-                super.updateItem(v, empty);
-                if (empty || v==null){ setText(null); setStyle(""); return; }
-                setText(v); setStyle("-fx-text-fill:"+fn.apply(v)+"; -fx-font-weight:bold;");
-            }
-        };
+    /* ╔═══════ Colonne & stile ═══════╗ */
+    private void bindColumns(){
+        colDate  .setCellValueFactory(c->new ReadOnlyStringWrapper(c.getValue().date().toString()));
+        colType  .setCellValueFactory(c->new ReadOnlyStringWrapper(c.getValue().type().toString()));
+        colCat   .setCellValueFactory(c->new ReadOnlyStringWrapper(c.getValue().categoryName()));
+        colAmount.setCellValueFactory(c->new ReadOnlyStringWrapper(c.getValue().amount().toString()));
+        colDesc  .setCellValueFactory(c->new ReadOnlyStringWrapper(c.getValue().description()));
     }
 
-    /* ──────── filtri iniziali ──────── */
-    // private void setupFilters() {
-    //     cbFilterCat.getItems().add(null);                 // “tutte”
-    //     cbFilterCat.setItems(FXCollections.observableArrayList(allCategoryNames()));
-    //     cbFilterType.getItems().add(null);
-    //     cbFilterType.getItems().addAll(TxType.values());
-    // }
+    private static final Map<Category, String> CAT_COLOR = Map.of(
+        Category.STIPENDIO,       "#13e2c0",
+        Category.AFFITTO,         "#2196f3",
+        Category.ALIMENTI,        "#ffc107",
+        Category.UTILITA,         "#9c27b0",
+        Category.INTRATTENIMENTO, "#f79400",
+        Category.CARBURANTE,      "#795548",
+        Category.ALTRO,           "#607d8b"
+    );
+
+    private void styleCells() {
+
+        /* colore verde/rosso sul tipo */
+        colType.setCellFactory(tc -> new TableCell<>() {
+            @Override protected void updateItem(String v, boolean empty) {
+                super.updateItem(v, empty);
+                if (empty || v == null) { setText(null); setStyle(""); return; }
+                setText(v);
+                setStyle("-fx-text-fill:" +
+                        (v.equalsIgnoreCase("ENTRATA") ? "#4caf50" : "#e53935") +
+                        "; -fx-font-weight:bold;");
+            }
+        });
+
+        /* colore in base alla categoria (mappa CAT_COLOR) */
+        colCat.setCellFactory(tc -> new TableCell<>() {
+            @Override protected void updateItem(String v, boolean empty) {
+                super.updateItem(v, empty);
+                if (empty || v == null) { setText(null); setStyle(""); return; }
+                setText(v);
+                String col = CAT_COLOR.getOrDefault(
+                        /* se è enum lo trova al volo, altrimenti usa grigio */
+                        Arrays.stream(Category.values())
+                            .map(Category::name)
+                            .anyMatch(v::equals) ? Category.valueOf(v) : Category.ALTRO,
+                        "#aaaaaa");
+                setStyle("-fx-text-fill:"+col+"; -fx-font-weight:bold;");
+            }
+        });
+    }
+
+
+    /* ╔═══════ Filtri combo ───────╗ */
     private void setupFilters() {
-        /* (1)  voce “(tutte)” – usiamo stringa vuota, il prompt la mostra */
-        cbFilterCat.getItems().setAll("");                   // reset
-        cbFilterCat.getItems().addAll(allCategoryNames());   // enum + custom
-        cbFilterCat.setPromptText("Categoria");
+
+        // (1) popolamento iniziale
+        refreshFilterCategories();
 
         /* (2)  TxType */
         cbFilterType.getItems().setAll((TxType) null);       // reset
         cbFilterType.getItems().addAll(TxType.values());
-        cbFilterType.setPromptText("Tipo");
+        cbFilterType.setPromptText("Tipologia");
+
+        /* (3)  quando l’utente aggiunge / rimuove categorie custom
+                aggiorniamo automaticamente la combo dei filtri               */
+        CUSTOM_CATEGORIES.addListener((ListChangeListener<String>) c ->
+                refreshFilterCategories());
     }
 
-    /* ──────── utilità ──────── */
+    /** ricrea le voci del combo categorie (vuota = “tutte”) */
+    private void refreshFilterCategories() {
+        /* salva l’eventuale selezione corrente */
+        String sel = cbFilterCat.getValue();
+
+        cbFilterCat.getItems().setAll("");                  // voce “tutte”
+        cbFilterCat.getItems().addAll(allCategoryNames());  // enum + custom
+
+        /* ristabilisci la selezione se ancora presente */
+        if (cbFilterCat.getItems().contains(sel)) {
+            cbFilterCat.setValue(sel);
+        } else {
+            cbFilterCat.setValue("");                       // default: tutte
+        }
+    }
+
+    /* ╔═══════ Chart helpers ═══════╗ */
     private YearMonth currentMonth(){ return YearMonth.from(monthPicker.getValue()); }
-    private Money sum(List<Transaction> l, TxType t){ return l.stream().filter(x->x.type()==t).map(Transaction::amount).reduce(Money.ZERO, Money::add); }
+    private Money sum(List<Transaction> list, TxType t){
+        return list.stream().filter(x->x.type()==t)
+                   .map(Transaction::amount)
+                   .reduce(Money.ZERO, Money::add);
+    }
 
     private ObservableList<PieChart.Data> buildIncomeData(List<Transaction> month){
         var map = month.stream().filter(t->t.type()==TxType.ENTRATA)
-                .collect(Collectors.groupingBy(Transaction::description,
-                        Collectors.reducing(Money.ZERO, Transaction::amount, Money::add)));
+                       .collect(Collectors.groupingBy(Transaction::description,
+                           Collectors.reducing(Money.ZERO, Transaction::amount, Money::add)));
 
         var data = FXCollections.<PieChart.Data>observableArrayList();
         map.forEach((d,v)->data.add(new PieChart.Data(d+" "+v, v.value().doubleValue())));
@@ -321,24 +390,55 @@ public final class MainController {
     }
     private ObservableList<PieChart.Data> buildExpenseData(List<Transaction> month){
         var map = month.stream().filter(t->t.type()==TxType.USCITA)
-                .collect(Collectors.groupingBy(Transaction::category,
-                        Collectors.reducing(Money.ZERO, Transaction::amount, Money::add)));
+                       .collect(Collectors.groupingBy(Transaction::categoryName,
+                           Collectors.reducing(Money.ZERO, Transaction::amount, Money::add)));
 
         var data = FXCollections.<PieChart.Data>observableArrayList();
-        map.forEach((c,v)->data.add(new PieChart.Data(c.name()+" "+v, v.value().doubleValue())));
-        colorSlices(data, d->CAT_COLOR.getOrDefault(Category.valueOf(d.getName().split(" ")[0]), "#aaaaaa"));
+        map.forEach((c,v)->data.add(new PieChart.Data(c+" "+v, v.value().doubleValue())));
+        colorSlices(data, d->categoryColor(d.getName().split(" ")[0]));
         return data;
     }
-    private void colorSlices(ObservableList<PieChart.Data> data, Function<PieChart.Data,String> fn){
+    private void colorSlices(ObservableList<PieChart.Data> data,
+                             Function<PieChart.Data,String> fn){
         javafx.application.Platform.runLater(() ->
-            data.forEach(d -> { if (d.getNode()!=null) d.getNode().setStyle("-fx-pie-color:"+fn.apply(d)); }));
+            data.forEach(d -> {
+                if(d.getNode()!=null) d.getNode().setStyle("-fx-pie-color:"+fn.apply(d));
+            }));
     }
-    private String incomeColor(String k){
-        return incomeColorCache.computeIfAbsent(k, key -> {
-            Color c = Color.hsb(120, 0.35+(Math.abs(key.hashCode())%50)/100.0, 0.82);
-            return String.format("#%02x%02x%02x", (int)(c.getRed()*255), (int)(c.getGreen()*255), (int)(c.getBlue()*255));
+
+    /* colore per categoria (enum o custom) */
+    private String categoryColor(String name){
+        try { return CAT_COLOR.get(Category.valueOf(name)); }
+        catch (Exception ex){
+            /* categoria custom → deterministico su hash */
+            return dynColor.computeIfAbsent(name, k -> {
+                Color c = Color.hsb((k.hashCode() & 0xffff)%360, 0.55, 0.75);
+                return String.format("#%02x%02x%02x",
+                        (int)(c.getRed()*255),
+                        (int)(c.getGreen()*255),
+                        (int)(c.getBlue()*255));
+            });
+        }
+    }
+
+    /* colore per singola entrata (usa la descrizione come chiave) */
+    private String incomeColor(String key){
+        return incomeColorCache.computeIfAbsent(key, k -> {
+            /* tonalità nel verde + saturazione variabile per avere nuance diverse */
+            Color c = Color.hsb(120,
+                                0.35 + (Math.abs(k.hashCode()) % 50) / 100.0,
+                                0.82);
+            return String.format("#%02x%02x%02x",
+                    (int)(c.getRed()  * 255),
+                    (int)(c.getGreen()* 255),
+                    (int)(c.getBlue() * 255));
         });
     }
-    private boolean confirm(String msg){ return new Alert(Alert.AlertType.CONFIRMATION,msg).showAndWait().orElse(ButtonType.CANCEL)==ButtonType.OK; }
+
+    /* ╔════ utilità GUI ═════╗ */
+    private boolean confirm(String msg){
+        return new Alert(Alert.AlertType.CONFIRMATION,msg)
+                .showAndWait().orElse(ButtonType.CANCEL)==ButtonType.OK;
+    }
     private void alert(String msg){ new Alert(Alert.AlertType.ERROR,msg).showAndWait(); }
 }
