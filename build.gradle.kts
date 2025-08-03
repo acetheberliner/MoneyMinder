@@ -1,35 +1,31 @@
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+import org.gradle.internal.os.OperatingSystem
+
 plugins {
     application
-    id("com.github.johnrengelman.shadow") version "8.1.1"   // fat-jar
-    id("org.beryx.jlink")                 version "2.26.0"  // runtime image
+    id("com.github.johnrengelman.shadow") version "8.1.1"
 }
 
-group   = "money.minder"
-version = "1.1.0"
+group = "money.minder"
+// version = "1.0"
 
-application {
-    mainClass.set("app.gui.LauncherFx")
-}
+application { mainClass.set("app.gui.LauncherFx") }
+java        { toolchain.languageVersion.set(JavaLanguageVersion.of(17)) }
 
-java {
-    toolchain.languageVersion.set(JavaLanguageVersion.of(17))
-}
-
-/* ---------- JavaFX come dipendenza ---------- */
 repositories { mavenCentral() }
 
-val jfxVersion = "21.0.1"
-val os = org.gradle.internal.os.OperatingSystem.current()
+/* ------------ JavaFX deps (NON dentro il fat-jar) ------------ */
+val jfxVer = "21.0.8"
 val platform = when {
-    os.isWindows -> "win"
-    os.isMacOsX  -> "mac"
-    else         -> "linux"
+    OperatingSystem.current().isWindows -> "win"
+    OperatingSystem.current().isMacOsX  -> "mac"
+    else                                -> "linux"
 }
 
 dependencies {
-    listOf("base", "graphics", "controls", "fxml").forEach {
-        implementation("org.openjfx:javafx-$it:$jfxVersion:$platform")
-        runtimeOnly  ("org.openjfx:javafx-$it:$jfxVersion:$platform")
+    listOf("base","graphics","controls","fxml").forEach {
+        implementation("org.openjfx:javafx-$it:$jfxVer:$platform")
+        runtimeOnly  ("org.openjfx:javafx-$it:$jfxVer:$platform")
     }
 
     implementation("info.picocli:picocli:4.7.5")
@@ -43,33 +39,15 @@ dependencies {
 
 tasks.test { useJUnitPlatform() }
 
-/* ---------- Shadow fat-jar ---------- */
-tasks.named<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("shadowJar") {
-    archiveBaseName.set("app")
-    archiveClassifier.set("") // app-1.1.0-all.jar
-    mergeServiceFiles()
-}
+/* ------------ shadowJar ------------ */
+tasks.named<ShadowJar>("shadowJar") {
+    archiveBaseName.set("MoneyMinder")
+    archiveClassifier.set("")
+    // archiveVersion.set(project.version.toString())
 
-/* ---------- JLink ---------- */
-jlink {
-    imageName.set("MoneyMinder")
-    options.set(listOf("--strip-debug", "--compress=2", "--no-header-files"))
-    launcher {
-        name = "moneyminder"
+    manifest {
+        attributes["Main-Class"] = "app.gui.LauncherFx"
     }
-    addExtraDependencies("javafx") // native-libs JavaFX
 }
 
-tasks.withType<JavaCompile> {
-    options.encoding = "UTF-8"
-}
-
-tasks.named<JavaExec>("run") {
-    val mp = configurations.runtimeClasspath.get()
-        .joinToString(File.pathSeparator) { it.absolutePath }
-
-    jvmArgs = listOf(
-        "--module-path", mp,
-        "--add-modules", "javafx.controls,javafx.fxml"
-    )
-}
+tasks.withType<JavaCompile> { options.encoding = "UTF-8" }

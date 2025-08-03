@@ -283,7 +283,7 @@ public final class MainController {
         colDate.setSortType(TableColumn.SortType.ASCENDING);
         table.getSortOrder().setAll(colDate);
 
-        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
+        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         table.setRowFactory(tv -> {
             TableRow<Transaction> row = new TableRow<>(){
                 @Override protected void updateItem(Transaction t, boolean empty){

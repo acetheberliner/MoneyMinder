@@ -41,7 +41,8 @@ public final class MonthlyReportDialog {
 
         java.util.Collections.addAll(tbl.getColumns(), colCat, colTot);
         tbl.getItems().setAll(rep.perCategoria().entrySet());
-        tbl.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
+        tbl.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+
 
         gp.add(tbl, 1, 0, 1, 3);
 
