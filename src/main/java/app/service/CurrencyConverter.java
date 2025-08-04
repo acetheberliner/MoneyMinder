@@ -7,12 +7,9 @@ public final class CurrencyConverter {
 
     /** tasso (1 unità della valuta → €) */
     private static final Map<String, BigDecimal> RATE = Map.of(
-            "EUR", BigDecimal.valueOf(1),
-            "USD", BigDecimal.valueOf(0.92),
-            "GBP", BigDecimal.valueOf(1.17),
-            "CHF", BigDecimal.valueOf(1.03),
-            "JPY", BigDecimal.valueOf(0.0069),
-            "CNY", BigDecimal.valueOf(0.13)
+        "EUR", BigDecimal.valueOf(1),
+        "USD", BigDecimal.valueOf(0.92),
+        "GBP", BigDecimal.valueOf(1.17)
     );
 
     /** converte  {@code amount}  da {@code cur}  in EUR  */
