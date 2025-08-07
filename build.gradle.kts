@@ -37,7 +37,12 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter:5.10.2")
 }
 
-tasks.test { useJUnitPlatform() }
+tasks.test { 
+    useJUnitPlatform()
+    testLogging {
+        events("passed", "skipped", "failed")
+    }
+}
 
 /* ------------ shadowJar ------------ */
 tasks.named<ShadowJar>("shadowJar") {
