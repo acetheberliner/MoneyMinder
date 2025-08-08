@@ -38,47 +38,85 @@ L’app salva automaticamente i dati in locale, garantendone la persistenza fra 
 ### 1.2 Analisi del dominio
 
 MoneyMinder ruota attorno al concetto di **movimento finanziario**. Ogni movimento possiede:
+
 - data
-- importo (in EUR, o convertito)
+- importo (espresso nel sistema in EUR, o convertito)
 - categoria
 - descrizione
 - tipologia (entrata / uscita)
 
-Su tali informazioni si appoggiano budget, report mensili e report annuali.
+>Su tali informazioni si appoggiano budget e riepiloghi periodici (report mensili/annuali)
 
 ```mermaid
 classDiagram
-    direction TB
-    class Transaction {
-        +LocalDate date
-        +TxType type
-        +Money amount
-        +String category
-        +String description
-    }
-    class Category { +String name }
-    class Money { +BigDecimal value }
-    class Budget { +String category +Money limit }
-    class MonthlyReport {
-        +YearMonth month
-        +Money in
-        +Money out
-        +Money balance
-    }
-    class AnnualReport {
-        +Year year
-        +Money in
-        +Money out
-        +Money balance
-    }
+direction TB
 
-    Transaction --> Category
-    Budget --> Category
-    MonthlyReport --> "*" Category
-    AnnualReport --> MonthlyReport
+class Transaction {
+  +date: LocalDate
+  +type: TxType
+  +amount: Money
+  +categoryName: String
+  +description: String
+}
+
+class Category {
+  +name: String
+  +kind: Kind
+}
+
+class Budget {
+  +category: Category
+  +limit: Money
+  +period: YearMonth
+}
+
+class Money {
+  +value: BigDecimal
+}
+
+class MonthlyReport {
+  +month: YearMonth
+  +in: Money
+  +out: Money
+  +balance: Money
+}
+
+class TxType {
+  <<enumeration>>
+  ENTRATA
+  USCITA
+}
+
+class Kind {
+  <<enumeration>>
+  PREDEFINITA
+  PERSONALIZZATA
+}
+
+%% Relazioni (solo dominio, niente tech)
+Transaction "1" --> "1" Category : appartiene a
+Budget "0..1" --> "1" Category : limite per
+MonthlyReport "1" o-- "*" Transaction : aggrega
+
+Money <.. Transaction
+Money <.. MonthlyReport
+Money <.. Budget
+TxType <.. Transaction
+Kind <.. Category
+
 ```
 
->Figura 1 – modello di dominio (solo entità, nessun dettaglio tecnico).
+---
+
+#### Note di lettura
+
+- Ogni **Transaction** ha una sola **Category**.
+- La Category può essere **predefinita** o **personalizzata**.
+- Il Budget è **opzionale** e di norma mensile per categoria.
+- MonthlyReport **aggrega le transazioni** del mese.
+- Money è il **value-object monetario** (nel sistema espresso in EUR).
+
+>Figura 1 – modello di dominio (solo entità).
 
 ## 2. Design
 
@@ -107,16 +145,56 @@ flowchart LR
 
 >Figura 2 – interazioni architetturali essenziali
 
+---
+
+Diagramma Architetturale (ECB/MVC: controller + servizi + DAO)
+
+```mermaid
+classDiagram
+direction LR
+
+class MainController
+class TransactionService
+class BudgetService
+class CurrencyConverter
+
+class TransactionDao {
+  <<interface>>
+  +loadAll(): List<Transaction>
+  +saveAll(List<Transaction>): void
+}
+class JsonTransactionDao
+
+class Transaction
+class MonthlyReport
+class Money
+
+MainController --> TransactionService : usa
+MainController --> BudgetService : usa
+MainController --> CurrencyConverter : usa
+
+TransactionService --> TransactionDao : persistenza
+JsonTransactionDao ..|> TransactionDao
+
+TransactionService --> MonthlyReport : costruisce
+TransactionService --> Transaction : gestisce
+BudgetService --> Money : limiti per categoria
+```
+
+>Figura 2-bis – Componenti e dipendenze principali (ECB/MVC)
+
+---
+
 Ogni componente svolge non più di due ruoli:
 
-| Componente             | Ruolo (≤ 3)                       | Dialoghi principali                    |
-| ---------------------- | --------------------------------- | -------------------------------------- |
-| **JavaFX GUI**         | boundary                          | binding tabelle / grafici ⇄ controller |
-| **MainController**     | control                           | orchestration fra view e servizi       |
-| **TransactionService** | domain-logic + persistence-facade | CRUD, aggregazioni, delega a DAO       |
-| **BudgetService**      | policy                            | soglie per categoria, alert            |
-| **CurrencyConverter**  | util                              | strategy-map tassi → EUR               |
-| **JsonTransactionDao** | persistence                       | (de)serializzazione JSON su disco      |
+| Componente | Ruolo (≤ 3) | Dialoghi principali |
+| ---------- | ----------- | ------------------- |
+| **JavaFX GUI** | Boundary | Binding tabelle / Ggrafici ⇄ Controller |
+| **MainController** | Control | Orchestrazione fra view e servizi |
+| **TransactionService** | Domain-logic + Ppersistence-Facade | CRUD, Aggregazioni, Delega a DAO |
+| **BudgetService** | Policy | Soglie per categoria, Alert |
+| **CurrencyConverter** | Util | Strategia tassi → EUR |
+| **JsonTransactionDao** | Persistence | (De)Serializzazione JSON |
 
 ---
 
@@ -153,13 +231,33 @@ sequenceDiagram
 - **Soluzione**: checkBudget(tx) somma le uscite del mese nella categoria e interroga BudgetService.
 
 ```mermaid
+sequenceDiagram
+    participant U as Utente
+    participant UI as Dialog Aggiungi
+    participant C as MainController
+    participant S as TransactionService
+    participant B as BudgetService
+    participant D as JsonTransactionDao
+
+    U->>UI: Conferma nuova transazione
+    UI->>C: onAdd(tx)
+    C->>S: add(tx)
+    S->>D: saveAll(...)
+    C->>B: get(tx.categoryName)
+    B-->>C: Optional(limit)
+    alt superamento limite
+        C->>UI: Alert("Budget superato")
+    end
+```
+
+>Pattern Observer (evento nuovo movimento) + Strategy (somma parametrica su YearMonth).
+
+```mermaid
 classDiagram
     class MainController
     class BudgetService
     MainController --> BudgetService
 ```
-
->Pattern Observer (evento nuovo movimento) + Strategy (somma parametrica su YearMonth).
 
 ---
 
@@ -168,6 +266,28 @@ classDiagram
 - **Problema**: Assegnare un colore stabile e leggibile a ogni categoria creata dall’utente.
 
 - **Soluzione**: Funzione Color.hsb(hash%360, 0.55, 0.75) calcolata on-the-fly; cache in dynColor.
+
+```mermaid
+classDiagram
+direction LR
+
+class MainController {
+  - dynColor: Map
+  - incomeColorCache: Map
+  + categoryColor(name: String): String
+  + incomeColor(key: String): String
+  + colorSlices(data, fn): void
+}
+
+class Color
+class SliceColorFn
+
+MainController ..> Color : HSB → HEX
+MainController ..> SliceColorFn : callback colore slice
+
+```
+
+>Il controller mantiene due cache di colori (categorie custom, sorgenti entrate) e calcola il colore tramite HSB deterministico; applica il colore alle slice dei pie chart tramite una funzione di callback passata a colorSlices().
 
 ```java
 return dynColor.computeIfAbsent(name, k -> {
@@ -195,8 +315,9 @@ sequenceDiagram
     participant Controller
     participant POI as «Apache POI»
     Controller->>POI: create workbook / sheet
-    Controller->>POI: write rows & styles
-    Controller->>POI: wb.write(file)
+    Controller->>POI: write header & rows (filtered)
+    Controller->>POI: apply currency style
+    Controller->>POI: autosize & write(file)
 ```
 
 ## 3. Sviluppo
@@ -217,23 +338,14 @@ Una suite JUnit 5 - eseguita con ```./gradlew test``` – copre tutta la logica 
 > Task :test
 
 BudgetServiceTest > putAndGet_shouldPersistBetweenInstances() PASSED
-
 BudgetServiceTest > put_zeroOrNullShouldRemoveEntry() PASSED
-
 BudgetServiceTest > all_shouldBeUnmodifiable() PASSED
-
 CurrencyConverterTest > toEur_shouldReturnIdentityForEur() PASSED
-
 CurrencyConverterTest > unknownCurrencyFallsBackToIdentity() PASSED
-
 CurrencyConverterTest > usdAndGbpRatesAreApplied() PASSED
-
 TransactionServiceTest > replace_shouldSubstituteElement() PASSED
-
 TransactionServiceTest > add_shouldPersistAndReturnInList() PASSED
-
 TransactionServiceTest > list_shouldBeUnmodifiable() PASSED
-
 TransactionServiceTest > monthlyReport_shouldAggregateCorrectly() PASSED
 ```
 
@@ -243,8 +355,124 @@ TransactionServiceTest > monthlyReport_shouldAggregateCorrectly() PASSED
 
 ### 3.2 Note di sviluppo
 
-Elenco 5 feature avanzate che ho implementato:
+Di seguito 5 punti in cui ho applicato feature avanzate in modo mirato:
 
+### 1. Filtri reattivi con ObservableList + FilteredList + SortedList
+
+- Dove: **app.gui.MainController**
+- Snippet:
+
+```java
+private final ObservableList<Transaction> master = FXCollections.observableArrayList();
+private final FilteredList<Transaction> filtered = new FilteredList<>(master, t -> true);
+private final SortedList<Transaction>   sorted   = new SortedList<>(filtered);
+
+@FXML private void applyFilters() {
+    String kw  = Optional.ofNullable(txtSearch.getText()).orElse("").toLowerCase().trim();
+    String cat = cbFilterCat.getValue();
+    TxType tSel= cbFilterType.getValue();
+    YearMonth ym = currentMonth();
+
+    filtered.setPredicate(tr ->
+        (kw.isBlank() || tr.description().toLowerCase().contains(kw)) &&
+        (cat == null || cat.isBlank() || tr.categoryName().equals(cat)) &&
+        (tSel == null || tr.type() == tSel) &&
+        YearMonth.from(tr.date()).equals(ym)
+    );
+
+    refreshCharts(ym);
+}
+```
+
+>Perché interessante: uso combinato di lambda predicate, Optional, e liste osservabili per ottenere filtri reattivi e ordinamento consistente con la TableView.
+
+---
+
+### 2. Color-hash deterministico per categorie personalizzate
+
+- Dove: **app.gui.MainController#categoryColor**
+- Snippet:
+
+```java
+return dynColor.computeIfAbsent(name, k -> {
+    Color c = Color.hsb((k.hashCode() & 0xffff) % 360, 0.55, 0.75);
+    return String.format("#%02x%02x%02x",
+        (int)(c.getRed()*255), (int)(c.getGreen()*255), (int)(c.getBlue()*255));
+});
+```
+
+>Perché interessante: algoritmo deterministico di colorazione (HSB) senza storage esterno, con cache tramite computeIfAbsent.
+
+---
+
+### 3. Grouping & reduction con Stream per grafici/report
+
+- Dove: **app.service.TransactionService#buildReport** & **app.gui.MainController#buildExpenseData**
+- Snippet:
+
+```java
+Map<String, Money> byCat = txs.stream().collect(Collectors.groupingBy(
+    Transaction::categoryName,
+    TreeMap::new,
+    Collectors.reducing(Money.ZERO, Transaction::amount, Money::add)
+));
+```
+
+>Perché interessante: uso di Collectors.groupingBy + reducing per sommare value-object (Money) in modo immutabile, ordinando per TreeMap.
+
+---
+
+### 4. Export Excel con Apache POI (stili valuta, autosize)
+
+- Dove: **app.gui.MainController#onExportXlsx**
+- Snippet:
+
+```java
+try (XSSFWorkbook wb = new XSSFWorkbook()) {
+    var sh = wb.createSheet("Transazioni");
+    var bold = wb.createFont(); bold.setBold(true);
+    var hdr  = wb.createCellStyle(); hdr.setFont(bold);
+    var money= wb.createCellStyle();
+    money.setDataFormat(wb.createDataFormat().getFormat("€#,##0.00"));
+
+    // header & rows...
+    for (int i = 0; i < head.length; i++) sh.autoSizeColumn(i);
+    try (FileOutputStream out = new FileOutputStream(f)) { wb.write(out); }
+}
+```
+
+>Perché interessante: facade su POI per generare un export pronto-uso con formato monetario e autosizing
+
+---
+
+### 5. Record immutabili, @JsonAlias e costruttore @JsonCreator
+
+- Dove: **app.model.Transaction** + **app.model.TxType** + **app.model.Category**
+- Snippet:
+
+```java
+public record Transaction(
+    LocalDate date,
+    String    description,
+    @JsonAlias("category") String categoryName,
+    Money     amount,
+    TxType    type
+) {
+    @JsonCreator
+    public Transaction(@JsonProperty("date") LocalDate date,
+                       @JsonProperty("description") String description,
+                       @JsonProperty("categoryName") @JsonAlias("category") String categoryName,
+                       @JsonProperty("amount") Money amount,
+                       @JsonProperty("type") TxType type) {
+        this.date = date; this.description = description;
+        this.categoryName = categoryName; this.amount = amount; this.type = type;
+    }
+}
+```
+
+>Perché interessante: uso di Java Record per value-semantics e integrazione con Jackson tramite @JsonAlias e @JsonCreator per garantire retro-compatibilità del formato JSON.
+
+---
 
 ## 4. Commenti finali
 
@@ -261,8 +489,8 @@ Elenco 5 feature avanzate che ho implementato:
 ### 4.2 Lavori futuri
 
 - Import CSV / Excel per completare l’opzionale O-02.
-- Distribuzione runtime-image con jlink (Java + JavaFX embedded).
 - Backup cloud (sincronizzazione JSON crittografato).
+- Update UX/UI.
 
 ### 4.3 Difficoltà riscontrate
 
@@ -293,7 +521,7 @@ e infine conferma con "**OK**"
 
 5. Dialog "**Budget**" – Imposta limiti mensili e ricevi alert al loro superamento.
 
-6. Esegui ricerce di transazioni filtrando per:
+6. Esegui ricerche di transazioni filtrando per:
     - Mese
     - Descrizione
     - Categoria
