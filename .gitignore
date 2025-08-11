@@ -1,6 +1,11 @@
 ### Gradle ###
-/**/build/
-/.gradle/
+# ignora tutto sotto qualsiasi build/
+**/build/**
+
+# ma NON ignora i fat-jar sotto build/libs
+!**/build/libs/
+!**/build/libs/*-all.jar
+
 
 ### VS Code ###
 .vscode/

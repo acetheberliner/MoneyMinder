@@ -533,10 +533,9 @@ e infine conferma con "**OK**"
 
 8. Dialog "**Report**" – Visualizza un riepilogo mensile con suddivisione del totale per categorie.
 
-9. Bottone "**Esporta**" – Salva i movimenti del mese corrente in formato Excel "*.xlsx*".
-
-10. Dialog "**Andamento**" - Visualizza grafici di andamento del saldo, con focus:
+9. Dialog "**Andamento**" - Visualizza grafici di andamento del saldo, con focus:
     - Giornaliero
     - Mensile
     - Annuale
   
+10. Pulsante "**Esporta**" – Salva i movimenti del mese corrente in formato Excel "*.xlsx*".
