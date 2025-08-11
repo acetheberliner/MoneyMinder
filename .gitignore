@@ -1,14 +1,9 @@
 ### Gradle ###
-# ignora tutto sotto qualsiasi build/
-**/build/**
-
-# ma NON ignora i fat-jar sotto build/libs
-!**/build/libs/
-!**/build/libs/*-all.jar
-
+/**/build/
+/.gradle/
 
 ### VS Code ###
 .vscode/
 
 ### OS ###
-.DS_Store
+.DS_Store 
