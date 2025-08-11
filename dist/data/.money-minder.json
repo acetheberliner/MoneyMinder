@@ -1,0 +1,129 @@
+[ {
+  "date" : [ 2025, 7, 13 ],
+  "description" : "Stipendio",
+  "categoryName" : "STIPENDIO",
+  "amount" : {
+    "value" : 1500
+  },
+  "type" : "ENTRATA"
+}, {
+  "date" : [ 2025, 7, 15 ],
+  "description" : "Affitto",
+  "categoryName" : "AFFITTO",
+  "amount" : {
+    "value" : 700
+  },
+  "type" : "USCITA"
+}, {
+  "date" : [ 2025, 7, 16 ],
+  "description" : "Storno pagamento",
+  "categoryName" : "INTRATTENIMENTO",
+  "amount" : {
+    "value" : 250
+  },
+  "type" : "ENTRATA"
+}, {
+  "date" : [ 2025, 7, 18 ],
+  "description" : "League",
+  "categoryName" : "INTRATTENIMENTO",
+  "amount" : {
+    "value" : 19.99
+  },
+  "type" : "USCITA"
+}, {
+  "date" : [ 2025, 7, 19 ],
+  "description" : "GPL",
+  "categoryName" : "CARBURANTE",
+  "amount" : {
+    "value" : 21.50
+  },
+  "type" : "USCITA"
+}, {
+  "date" : [ 2025, 7, 19 ],
+  "description" : "Spesa settimanale",
+  "categoryName" : "ALIMENTI",
+  "amount" : {
+    "value" : 45.80
+  },
+  "type" : "USCITA"
+}, {
+  "date" : [ 2025, 7, 19 ],
+  "description" : "Spese di pulizia",
+  "categoryName" : "UTILITA",
+  "amount" : {
+    "value" : 50.00
+  },
+  "type" : "USCITA"
+}, {
+  "date" : [ 2025, 7, 22 ],
+  "description" : "Stipendio negozio",
+  "categoryName" : "STIPENDIO",
+  "amount" : {
+    "value" : 500
+  },
+  "type" : "ENTRATA"
+}, {
+  "date" : [ 2025, 7, 24 ],
+  "description" : "Spese Gatto",
+  "categoryName" : "ANIMALI",
+  "amount" : {
+    "value" : 25
+  },
+  "type" : "USCITA"
+}, {
+  "date" : [ 2025, 7, 26 ],
+  "description" : "Cinema",
+  "categoryName" : "INTRATTENIMENTO",
+  "amount" : {
+    "value" : 40
+  },
+  "type" : "USCITA"
+}, {
+  "date" : [ 2025, 7, 26 ],
+  "description" : "Stipendio spiaggia",
+  "categoryName" : "STIPENDIO",
+  "amount" : {
+    "value" : 1800
+  },
+  "type" : "ENTRATA"
+}, {
+  "date" : [ 2025, 7, 27 ],
+  "description" : "Servizi condominiali",
+  "categoryName" : "AFFITTO",
+  "amount" : {
+    "value" : 46.00
+  },
+  "type" : "USCITA"
+}, {
+  "date" : [ 2025, 6, 10 ],
+  "description" : "Stipendio Giugno",
+  "categoryName" : "STIPENDIO",
+  "amount" : {
+    "value" : 1442.00
+  },
+  "type" : "ENTRATA"
+}, {
+  "date" : [ 2025, 6, 19 ],
+  "description" : "Affitto giugno 2025",
+  "categoryName" : "AFFITTO",
+  "amount" : {
+    "value" : 552.00
+  },
+  "type" : "USCITA"
+}, {
+  "date" : [ 2025, 6, 1 ],
+  "description" : "Regalo compleanno",
+  "categoryName" : "ALTRO",
+  "amount" : {
+    "value" : 400
+  },
+  "type" : "ENTRATA"
+}, {
+  "date" : [ 2025, 6, 1 ],
+  "description" : "Spesa",
+  "categoryName" : "ALIMENTI",
+  "amount" : {
+    "value" : 70
+  },
+  "type" : "USCITA"
+} ]
