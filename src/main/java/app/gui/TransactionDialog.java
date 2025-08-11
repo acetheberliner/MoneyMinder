@@ -72,7 +72,7 @@ public final class TransactionDialog {
 
         // valuta
         ComboBox<String> cbCur = new ComboBox<>();
-        cbCur.getItems().addAll("EUR", "USD", "GBP", "CHF, JPY, CNY");
+        cbCur.getItems().addAll("EUR", "USD", "GBP");
         cbCur.getSelectionModel().select("EUR");
 
         // layout
