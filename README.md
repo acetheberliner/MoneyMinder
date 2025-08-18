@@ -1,3 +1,5 @@
+![alt text](https://i.ibb.co/k2Y1kS3z/logopng.png)
+
 >*Progettazione e Sviluppo del Software – Relazione di progetto*  
 >
 >**Studente**: Tommaso Bagnolini – Matricola 0001071116 – <tommaso.bagnolini@studio.unibo.it><br>
