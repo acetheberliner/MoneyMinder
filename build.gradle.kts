@@ -9,7 +9,7 @@ plugins {
 group = "money.minder"
 // version = "1.0"
 
-application { mainClass.set("app.gui.LauncherFx") }
+application { mainClass.set("app.ui.App") }
 java        { toolchain.languageVersion.set(JavaLanguageVersion.of(17)) }
 
 repositories { mavenCentral() }
@@ -51,7 +51,7 @@ tasks.named<ShadowJar>("shadowJar") {
     // archiveVersion.set(project.version.toString())
 
     manifest {
-        attributes["Main-Class"] = "app.gui.LauncherFx"
+        attributes["Main-Class"] = "app.ui.App"
     }
 }
 
