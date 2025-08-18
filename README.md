@@ -1,4 +1,4 @@
-![alt text](https://i.ibb.co/k2Y1kS3z/logopng.png)
+![Logo Money Minder](https://i.ibb.co/k2Y1kS3z/logopng.png)
 
 >*Progettazione e Sviluppo del Software – Relazione di progetto*  
 >
