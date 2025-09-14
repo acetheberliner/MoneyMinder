@@ -164,15 +164,22 @@ public final class MainController {
 
     /* --------- Filtri --------- */
     @FXML private void applyFilters() {
-        String kw = Optional.ofNullable(txtSearch.getText()).orElse("").toLowerCase().trim();
-        String cat = cbFilterCat.getValue();
+        // Normalizza categoria: null = nessun filtro
+        String sel = Optional.ofNullable(cbFilterCat.getValue()).orElse("").trim();
+        String cat = (
+                sel.isBlank()
+            || "Categoria".equalsIgnoreCase(sel)
+            || "— Tutte —".equals(sel)        // em dash
+        ) ? null : sel;
+
+        String kw   = Optional.ofNullable(txtSearch.getText()).orElse("").toLowerCase().trim();
         TxType tSel = cbFilterType.getValue();
         YearMonth ym = currentMonth();
 
         filtered.setPredicate(tr ->
             (kw.isBlank() || tr.description().toLowerCase().contains(kw)) &&
-            (cat == null || cat.isBlank() || tr.categoryName().equals(cat)) &&
-            (tSel == null || tr.type() == tSel) &&
+            (cat == null   || tr.categoryName().equals(cat)) &&
+            (tSel == null  || tr.type() == tSel) &&
             YearMonth.from(tr.date()).equals(ym)
         );
 
